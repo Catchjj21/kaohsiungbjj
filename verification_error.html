@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Verification Error</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Inter', sans-serif; }</style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+    <div class="text-center bg-white p-10 rounded-lg shadow-lg max-w-md mx-auto">
+        <h1 class="text-3xl font-black text-red-600 lang" data-lang-en="Verification Failed" data-lang-zh="驗證失敗">Verification Failed</h1>
+        <p class="mt-4 text-gray-700 lang" data-lang-en="The verification link is invalid, expired, or your account may already be active." data-lang-zh="驗證連結無效、已過期，或您的帳戶可能已經啟用。">The verification link is invalid, expired, or your account may already be active.</p>
+        <p class="mt-2 text-gray-700 lang" data-lang-en="Please try logging in or contact support if you continue to have issues." data-lang-zh="請嘗試登入，如果問題仍然存在，請聯繫支援人員。">Please try logging in or contact support if you continue to have issues.</p>
+        <a href="index.html" class="mt-6 inline-block bg-blue-600 text-white font-bold py-2 px-4 rounded hover:bg-blue-700 lang" data-lang-en="Go to Homepage" data-lang-zh="回到首頁">Go to Homepage</a>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Function to switch language based on URL parameter
+            const setLanguage = () => {
+                const langElements = document.querySelectorAll('.lang');
+                const urlParams = new URLSearchParams(window.location.search);
+                // Default to English if 'lang' parameter is not 'zh'
+                const lang = urlParams.get('lang') === 'zh' ? 'zh' : 'en';
+
+                langElements.forEach(el => {
+                    const text = el.getAttribute(`data-lang-${lang}`);
+                    if (text) {
+                        el.textContent = text;
+                    }
+                });
+            };
+            setLanguage();
+        });
+    </script>
+</body>
+</html>

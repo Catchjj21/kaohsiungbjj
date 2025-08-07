@@ -1,0 +1,100 @@
+<?php
+// Start the session
+session_start();
+
+// Include the database configuration file
+// This assumes db_config.php is in the same folder.
+require_once "db_config.php";
+
+// Define variables and initialize with empty values
+$email = $password = "";
+$email_err = $password_err = $login_err = "";
+
+// Processing form data when form is submitted
+if($_SERVER["REQUEST_METHOD"] == "POST"){
+
+    // Check if email is empty
+    if(empty(trim($_POST["email"]))){
+        $email_err = "Please enter email.";
+    } else{
+        $email = trim($_POST["email"]);
+    }
+    
+    // Check if password is empty
+    if(empty(trim($_POST["password"]))){
+        $password_err = "Please enter your password.";
+    } else{
+        $password = trim($_POST["password"]);
+    }
+    
+    // Validate credentials
+    if(empty($email_err) && empty($password_err)){
+        // Prepare a select statement
+        $sql = "SELECT id, first_name, last_name, email, password_hash, role FROM users WHERE email = ?";
+        
+        if($stmt = mysqli_prepare($link, $sql)){
+            mysqli_stmt_bind_param($stmt, "s", $param_email);
+            $param_email = $email;
+            
+            if(mysqli_stmt_execute($stmt)){
+                mysqli_stmt_store_result($stmt);
+                
+                // Check if email exists, if yes then verify password
+                if(mysqli_stmt_num_rows($stmt) == 1){                      
+                    // Bind first_name and last_name to separate variables
+                    mysqli_stmt_bind_result($stmt, $id, $first_name, $last_name, $email_from_db, $hashed_password, $role);
+                    
+                    if(mysqli_stmt_fetch($stmt)){
+                        if(password_verify($password, $hashed_password)){
+                            // Password is correct, so start a new session
+                            
+                            // Store data in session variables
+                            $_SESSION["loggedin"] = true;
+                            $_SESSION["id"] = $id;
+                            
+                            // Combine first_name and last_name for full_name session variable
+                            $_SESSION["full_name"] = $first_name . " " . $last_name;
+                            
+                            // Use the email fetched from the database, not the posted one, for consistency
+                            $_SESSION["email"] = $email_from_db;                     
+                            $_SESSION["role"] = $role;
+
+                            // --- MODIFIED REDIRECTION LOGIC ---
+                            // Redirect based on the user's role
+                            if ($role == 'parent') {
+                                // Redirect parents to the specific family dashboard
+                                header("location: parents_dashboard.php");
+                            } else if ($role == 'coach') {
+                                // Redirect coaches to the new coach dashboard
+                                header("location: coach/coach_dashboard.php");
+                            } else {
+                                // Redirect everyone else (admin, member) to the general dashboard
+                                header("location: dashboard.php");
+                            }
+                            exit; // Always good practice to exit after a header redirect
+                        } else{
+                            // Password is not valid
+                            $login_err = "Invalid email or password.";
+                        }
+                    }
+                } else{
+                    // Email doesn't exist
+                    $login_err = "Invalid email or password.";
+                }
+            } else{
+                echo "Oops! Something went wrong. Please try again later.";
+            }
+            mysqli_stmt_close($stmt);
+        }
+    }
+    
+    // Close connection
+    mysqli_close($link);
+
+    // If there was a login error, redirect back to login page with an error message
+    if(!empty($login_err)) {
+        header("location: login.html?error=" . urlencode($login_err));
+        exit;
+    }
+}
+?>

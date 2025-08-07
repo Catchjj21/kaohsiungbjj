@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kids Jiu Jitsu Program - Catch Jiu Jitsu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="/favicon.png" type="image/png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+
+        body {
+            font-family: 'Inter', sans-serif;
+            padding-top: 80px; /* Adjust for fixed header height */
+        }
+        .text-gradient {
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            background-image: linear-gradient(to right, #3b82f6, #8b5cf6);
+        }
+        .hero-bg {
+            background-color: #f3f4f6;
+            background-image:
+                radial-gradient(at 47% 33%, hsl(200.00, 0%, 100%) 0, transparent 59%),
+                radial-gradient(at 82% 65%, hsl(215.00, 70%, 85%) 0, transparent 55%);
+        }
+        .modal {
+            transition: opacity 0.25s ease;
+        }
+        .timetable-container::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .timetable-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .timetable-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        .timetable-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        .gallery-img {
+            transition: transform 0.3s ease;
+        }
+        .gallery-img:hover {
+            transform: scale(1.05);
+        }
+        .art-description {
+            transition: all 0.3s ease-in-out;
+        }
+        .faq-question:hover {
+            color: #2563eb;
+        }
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+        }
+        .faq-answer.open {
+            max-height: 500px; /* A sufficiently large number */
+        }
+        .faq-icon {
+            transition: transform 0.3s ease;
+        }
+        .faq-icon.rotate {
+            transform: rotate(45deg);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <nav id="navbar" class="bg-white shadow-md fixed top-0 left-0 right-0 z-40">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center h-20">
+                <a href="#home" class="flex items-center space-x-2">
+                    <img src="logo.png" alt="Catch Jiu Jitsu Logo" class="h-12 w-12" onerror="this.onerror=null;this.src='https://placehold.co/48x48/e0e0e0/333333?text=Logo';">
+                    <span class="font-bold text-xl text-gray-800">Catch Jiu Jitsu</span>
+                </a>
+
+                <div class="hidden md:flex items-center space-x-4">
+                    <a href="#about" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium lang" data-lang-en="About" data-lang-zh="關於">About</a>
+                    <a href="#coaches" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium lang" data-lang-en="Coaches" data-lang-zh="教練">Coaches</a>
+                    <a href="#pricing" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium lang" data-lang-en="Pricing" data-lang-zh="價格">Pricing</a>
+                    <a href="#testimonials" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium lang" data-lang-en="Testimonials" data-lang-zh="家長推薦">Testimonials</a>
+                    <a href="#gallery" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium lang" data-lang-en="Gallery" data-lang-zh="照片庫">Gallery</a>
+                    <a href="#faq" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium lang" data-lang-en="FAQ" data-lang-zh="常見問題">FAQ</a>
+                    <button id="open-schedule-modal-nav" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium lang" data-lang-en="Schedule" data-lang-zh="課程表">Schedule</button>
+                    <a href="#contact" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium lang" data-lang-en="Contact" data-lang-zh="聯絡我們">Contact</a>
+                    
+                    <a href="login.html" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium lang" data-lang-en="Log In" data-lang-zh="登入">Log In</a>
+                    
+                    <div id="lang-switcher-desktop" class="pl-4 flex items-center space-x-2 text-sm border-l border-gray-300 ml-4">
+                        <button id="lang-en-desktop" class="font-bold text-blue-600">EN</button>
+                        <span class="text-gray-300">|</span>
+                        <button id="lang-zh-desktop" class="font-normal text-gray-500 hover:text-blue-600">中文</button>
+                    </div>
+                </div>
+
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-button" class="text-gray-800 hover:text-blue-600 focus:outline-none">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="mobile-menu" class="md:hidden hidden bg-white border-t border-gray-200">
+            <a href="#about" class="block py-3 px-4 text-sm text-gray-600 hover:bg-gray-100 lang nav-link" data-lang-en="About" data-lang-zh="關於">About</a>
+            <a href="#coaches" class="block py-3 px-4 text-sm text-gray-600 hover:bg-gray-100 lang nav-link" data-lang-en="Coaches" data-lang-zh="教練">Coaches</a>
+            <a href="#pricing" class="block py-3 px-4 text-sm text-gray-600 hover:bg-gray-100 lang nav-link" data-lang-en="Pricing" data-lang-zh="價格">Pricing</a>
+            <a href="#testimonials" class="block py-3 px-4 text-sm text-gray-600 hover:bg-gray-100 lang nav-link" data-lang-en="Testimonials" data-lang-zh="家長推薦">Testimonials</a>
+            <a href="#gallery" class="block py-3 px-4 text-sm text-gray-600 hover:bg-gray-100 lang nav-link" data-lang-en="Gallery" data-lang-zh="照片庫">Gallery</a>
+            <a href="#faq" class="block py-3 px-4 text-sm text-gray-600 hover:bg-gray-100 lang nav-link" data-lang-en="FAQ" data-lang-zh="常見問題">FAQ</a>
+            <button id="open-schedule-modal-mobile" class="w-full text-left py-3 px-4 text-sm text-gray-600 hover:bg-gray-100 lang nav-link" data-lang-en="Schedule" data-lang-zh="課程表">Schedule</button>
+            <a href="#contact" class="block py-3 px-4 text-sm text-gray-600 hover:bg-gray-100 lang nav-link" data-lang-en="Contact" data-lang-zh="聯絡我們">Contact</a>
+
+            <a href="login.html" class="block py-3 px-4 text-sm text-gray-600 hover:bg-gray-100 lang nav-link" data-lang-en="Log In" data-lang-zh="登入">Log In</a>
+
+            <div class="py-3 px-4 border-t">
+                 <div id="lang-switcher-mobile" class="flex items-center space-x-4 text-base mt-2">
+                     <button id="lang-en-mobile" class="font-bold text-blue-600">English</button>
+                     <span class="text-gray-300">|</span>
+                     <button id="lang-zh-mobile" class="font-normal text-gray-500 hover:text-blue-600">中文</button>
+                 </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto p-4 md:p-8">
+
+        <header id="home" class="text-center py-12 hero-bg rounded-3xl shadow-lg">
+            <h1 class="text-4xl md:text-6xl font-black text-gray-800 tracking-tight">
+                <span class="text-gradient lang" data-lang-en="Catch Jiu Jitsu" data-lang-zh="Catch 柔術">Catch Jiu Jitsu</span>
+            </h1>
+            <p class="mt-4 text-lg md:text-2xl font-semibold text-gray-600 lang" data-lang-en="Asia's Premier Jiu Jitsu Program for Kids!" data-lang-zh="亞洲頂級的兒童柔術課程！">Asia's Premier Jiu Jitsu Program for Kids!</p>
+            <button id="open-contact-modal-top" class="mt-8 bg-purple-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition hover:bg-purple-700 hover:scale-105 lang" data-lang-en="Book a Free Trial Class" data-lang-zh="預約免費試聽課">
+                Book a Free Trial Class
+            </button>
+        </header>
+
+        <main id="about" class="mt-12 grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+            <div class="lg:col-span-2 space-y-8">
+                
+                <section class="bg-white p-8 rounded-2xl shadow-md transition hover:shadow-xl">
+                    <h2 class="text-3xl font-bold text-gray-800 border-b-4 border-blue-500 pb-2 inline-block lang" data-lang-en="The Best Start in Martial Arts" data-lang-zh="武術的最佳起點">The Best Start in Martial Arts</h2>
+                    <p class="mt-4 text-gray-700 text-base leading-relaxed lang" data-lang-en="At Catch Jiu Jitsu, our curriculum goes beyond simple, repetitive drills. We believe the best way for children to learn is by doing, not just memorizing. Our coaches set up fun, challenging scenarios that encourage kids to explore, experiment, and find their own creative solutions. This unique, problem-solving approach builds natural instinct, adaptability, and true confidence that extends far beyond the mat." data-lang-zh="在 Catch 柔術，我們的課程超越了簡單的重複性練習。我們相信孩子們最好的學習方式是透過實踐，而不僅僅是死記硬背。我們的教練會設計有趣且充滿挑戰的場景，鼓勵孩子們探索、實驗並找到自己的創意解決方案。這種獨特的、以解決問題為導向的教學方法能培養孩子們的自然本能、適應能力和真正的自信，這些優勢不僅限於墊子上。">
+                        At Catch Jiu Jitsu, our curriculum goes beyond simple, repetitive drills. We believe the best way for children to learn is by doing, not just memorizing. Our coaches set up fun, challenging scenarios that encourage kids to explore, experiment, and find their own creative solutions. This unique, problem-solving approach builds natural instinct, adaptability, and true confidence that extends far beyond the mat.
+                    </p>
+                </section>
+
+                <section class="bg-white p-8 rounded-2xl shadow-md transition hover:shadow-xl">
+                    <h2 class="text-3xl font-bold text-gray-800 border-b-4 border-purple-500 pb-2 inline-block lang" data-lang-en="Our Age Groups" data-lang-zh="我們的年齡分組">Our Age Groups</h2>
+                    <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-blue-50 p-6 rounded-xl border-l-4 border-blue-500 flex flex-col">
+                            <h3 class="text-2xl font-bold text-blue-800 lang" data-lang-en="Youth Grapplers (5-8 yrs)" data-lang-zh="幼年擒抱者 (5-8 歲)">Youth Grapplers (5-8 yrs)</h3>
+                            <p class="mt-2 text-gray-700 flex-grow lang" data-lang-en="Our youngest group focuses on fundamental movements, coordination, and fun! Through games and structured play, kids learn the basics of Jiu Jitsu in a safe and supportive environment." data-lang-zh="我們最年輕的組別專注於基本動作、協調性和樂趣！通過遊戲和結構化的活動，孩子們在安全和支持性的環境中學習柔術的基礎知識。">
+                                Our youngest group focuses on fundamental movements, coordination, and fun! Through games and structured play, kids learn the basics of Jiu Jitsu in a safe and supportive environment.
+                            </p>
+                            <button id="open-youth-modal" class="mt-4 text-sm text-blue-600 hover:underline self-start lang" data-lang-en="View More" data-lang-zh="查看更多">View More</button>
+                        </div>
+                        <div class="bg-purple-50 p-6 rounded-xl border-l-4 border-purple-500 flex flex-col">
+                             <h3 class="text-2xl font-bold text-purple-800 lang" data-lang-en="Junior Grapplers (9-15 yrs)" data-lang-zh="少年擒抱者 (9-15 歲)">Junior Grapplers (9-15 yrs)</h3>
+                             <p class="mt-2 text-gray-700 flex-grow lang" data-lang-en="This class builds on the fundamentals with more advanced techniques in BJJ, Judo, and Wrestling. We focus on technique, sparring, and sportsmanship to prepare them for the next level." data-lang-zh="這個班級在基礎上增加了更高級的巴西柔術、柔道和摔跤技巧。我們專注於技術、對打和體育精神，為他們的下一個階段做好準備。">
+                                 This class builds on the fundamentals with more advanced techniques in BJJ, Judo, and Wrestling. We focus on technique, sparring, and sportsmanship to prepare them for the next level.
+                             </p>
+                             <button id="open-junior-modal" class="mt-4 text-sm text-purple-600 hover:underline self-start lang" data-lang-en="View More" data-lang-zh="查看更多">View More</button>
+                        </div>
+                    </div>
+                </section>
+                
+                <section class="bg-white p-8 rounded-2xl shadow-md transition hover:shadow-xl">
+                    <h2 class="text-3xl font-bold text-gray-800 border-b-4 border-green-500 pb-2 inline-block lang" data-lang-en="A Dynamic Trio of Arts" data-lang-zh="充滿活力的三重藝術">A Dynamic Trio of Arts</h2>
+                    <p class="mt-4 text-gray-700 text-base leading-relaxed lang" data-lang-en="We believe in a holistic approach to grappling. Our students don't just learn one style; they are exposed to a powerful combination of:" data-lang-zh="我們相信全面的擒抱方法。我們的學生不僅僅學習一種風格；他們會接觸到以下強大的組合：">
+                        We believe in a holistic approach to grappling. Our students don't just learn one style; they are exposed to a powerful combination of:
+                    </p>
+                    <div class="mt-4 space-y-4">
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-lg font-semibold text-gray-800"><span class="text-green-500 font-bold mr-2">✔</span> <span class="lang" data-lang-en="Brazilian Jiu-Jitsu (BJJ)" data-lang-zh="巴西柔術 (BJJ)">Brazilian Jiu-Jitsu (BJJ)</span></h4>
+                                <button class="text-sm text-blue-600 hover:underline focus:outline-none view-more-btn lang" data-lang-en="View More" data-lang-zh="查看更多" data-lang-en-less="View Less" data-lang-zh-less="收起">View More</button>
+                            </div>
+                            <p class="mt-2 text-gray-600 text-sm leading-relaxed hidden art-description lang" data-lang-en="Often called 'the gentle art,' BJJ is a grappling-based martial art that focuses on the skill of controlling a resisting opponent in ways that force them to submit. It emphasizes taking an opponent to the ground, controlling them, and using techniques like joint-locks and chokeholds to defeat them. Because it relies on leverage and technique rather than size and strength, it's an ideal self-defense system for people of all ages and sizes." data-lang-zh="BJJ通常被稱為“溫柔的藝術”，是一種以擒抱為基礎的武術，專注於以迫使對手屈服的方式控制抵抗中的對手。它強調將對手帶到地面，控制他們，並使用關節鎖和絞技等技術來擊敗他們。因為它依賴於槓桿和技巧，而不是體型和力量，所以對於所有年齡和體型的人來說，這是一種理想的自衛系統。"></p>
+                        </div>
+                         <div>
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-lg font-semibold text-gray-800"><span class="text-green-500 font-bold mr-2">✔</span> <span class="lang" data-lang-en="Judo" data-lang-zh="柔道">Judo</span></h4>
+                                <button class="text-sm text-blue-600 hover:underline focus:outline-none view-more-btn lang" data-lang-en="View More" data-lang-zh="查看更多" data-lang-en-less="View Less" data-lang-zh-less="收起">View More</button>
+                            </div>
+                            <p class="mt-2 text-gray-600 text-sm leading-relaxed hidden art-description lang" data-lang-en="Translated as 'the gentle way,' Judo is a dynamic Olympic sport that emphasizes spectacular throws and takedowns. Students learn to use an opponent's own force against them, along with powerful pins and control on the ground. Judo instills discipline, respect, and the principle of 'maximum efficiency, minimum effort.'" data-lang-zh="柔道被翻譯為“溫柔的方式”，是一項充滿活力的奧林匹克運動，強調壯觀的摔投和擒拿。學生學習利用對手自身的力量來對付他們，以及在地面上強大的壓制和控制。柔道灌輸紀律、尊重和“精力善用，自他共榮”的原則。"></p>
+                        </div>
+                         <div>
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-lg font-semibold text-gray-800"><span class="text-green-500 font-bold mr-2">✔</span> <span class="lang" data-lang-en="Wrestling" data-lang-zh="摔跤">Wrestling</span></h4>
+                                <button class="text-sm text-blue-600 hover:underline focus:outline-none view-more-btn lang" data-lang-en="View More" data-lang-zh="查看更多" data-lang-en-less="View Less" data-lang-zh-less="收起">View More</button>
+                            </div>
+                            <p class="mt-2 text-gray-600 text-sm leading-relaxed hidden art-description lang" data-lang-en="One of the world's oldest sports, wrestling is the ultimate test of athleticism, grit, and determination. It focuses on takedowns, controlling an opponent, and escaping from bad positions. Wrestling builds incredible physical strength, endurance, and mental toughness that benefits students in all aspects of life." data-lang-zh="作為世界上最古老的運動之一，摔跤是對運動能力、毅力和決心的終極考驗。它專注於摔倒、控制對手以及從不利位置逃脫。摔跤能培養出令人難以置信的體力、耐力和心理韌性，這將使學生在生活的各個方面受益。"></p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="coaches" class="bg-white p-8 rounded-2xl shadow-md transition hover:shadow-xl">
+                    <h2 class="text-3xl font-bold text-gray-800 border-b-4 border-yellow-500 pb-2 inline-block lang" data-lang-en="Meet the Coaches" data-lang-zh="認識教練">Meet the Coaches</h2>
+                    <div class="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
+                        <div>
+                            <img src="IMG_8762.jpg" alt="Dan Reid" class="w-32 h-32 rounded-full mx-auto shadow-lg border-4 border-white object-cover">
+                            <h3 class="mt-4 text-xl font-bold text-gray-800">Dan Reid</h3>
+                            <p class="text-gray-600 lang" data-lang-en="Head Coach" data-lang-zh="總教練">Head Coach</p>
+                            <button id="open-dan-modal" class="mt-2 text-sm text-blue-600 hover:underline lang" data-lang-en="View Resume" data-lang-zh="查看履歷">View Resume</button>
+                        </div>
+                        <div>
+                            <img src="steven (1).jpg" alt="Steven Lee" class="w-32 h-32 rounded-full mx-auto shadow-lg border-4 border-white object-cover">
+                            <h3 class="mt-4 text-xl font-bold text-gray-800">Steven Lee</h3>
+                            <p class="text-gray-600 lang" data-lang-en="Judo Coach" data-lang-zh="柔道教練">Judo Coach</p>
+                            <button id="open-steven-modal" class="mt-2 text-sm text-blue-600 hover:underline lang" data-lang-en="View Resume" data-lang-zh="查看履歷">View Resume</button>
+                        </div>
+                        <div>
+                            <img src="xiaoniu.jpg" alt="Xiaoniu" class="w-32 h-32 rounded-full mx-auto shadow-lg border-4 border-white object-cover">
+                            <h3 class="mt-4 text-xl font-bold text-gray-800">Xiaoniu</h3>
+                            <p class="text-gray-600 lang" data-lang-en="Wrestling Coach" data-lang-zh="摔跤教練">Wrestling Coach</p>
+                            <button id="open-xiaoniu-modal" class="mt-2 text-sm text-blue-600 hover:underline lang" data-lang-en="View Resume" data-lang-zh="查看履歷">View Resume</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ==================================================== -->
+                <!-- ===== NEW INTERACTIVE PRICING SECTION START ====== -->
+                <!-- ==================================================== -->
+                <section id="pricing" class="bg-white p-8 rounded-2xl shadow-md transition hover:shadow-xl">
+                    <h2 class="text-3xl font-bold text-gray-800 border-b-4 border-red-500 pb-2 inline-block lang" data-lang-en="Membership Options" data-lang-zh="會員選項">Membership Options</h2>
+                
+                    <!-- Controls -->
+                    <div class="mt-6 space-y-6">
+                        <!-- Age Group Selector -->
+                        <div>
+                            <label class="text-lg font-semibold text-gray-800 lang" data-lang-en="1. Select Age Group" data-lang-zh="1. 選擇年齡組">1. Select Age Group</label>
+                            <div id="pricing-age-selector" class="mt-2 flex rounded-md shadow-sm" role="group">
+                                <button type="button" data-age="Adult" class="pricing-age-btn w-full px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-l-lg hover:bg-gray-100 focus:z-10 focus:ring-2 focus:ring-blue-500">
+                                    <span class="lang" data-lang-en="Adult" data-lang-zh="成人">Adult</span>
+                                </button>
+                                <button type="button" data-age="Kid" class="pricing-age-btn w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 border-t border-b border-r border-gray-200 rounded-r-lg hover:bg-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-500">
+                                    <span class="lang" data-lang-en="Kid" data-lang-zh="兒童">Kid</span>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Plan Type Selector -->
+                        <div>
+                            <label class="text-lg font-semibold text-gray-800 lang" data-lang-en="2. Select Plan Type" data-lang-zh="2. 選擇方案類型">2. Select Plan Type</label>
+                            <div id="pricing-plan-selector" class="mt-2 grid grid-cols-2 md:grid-cols-3 gap-2" role="group">
+                                <!-- Buttons will be dynamically inserted here -->
+                            </div>
+                        </div>
+                    </div>
+                
+                    <!-- Pricing Display -->
+                    <div id="pricing-display-container" class="mt-8 min-h-[200px]">
+                        <!-- Plan details will be rendered here -->
+                    </div>
+                </section>
+                <!-- ================================================== -->
+                <!-- ===== NEW INTERACTIVE PRICING SECTION END ====== -->
+                <!-- ================================================== -->
+
+                <section id="testimonials" class="bg-white p-8 rounded-2xl shadow-md transition hover:shadow-xl">
+                    <h2 class="text-3xl font-bold text-gray-800 border-b-4 border-indigo-500 pb-2 inline-block lang" data-lang-en="What Our Parents Say" data-lang-zh="家長怎麼說">What Our Parents Say</h2>
+                    <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-indigo-50 p-6 rounded-xl border-l-4 border-indigo-500">
+                            <p class="text-gray-700 italic lang" data-lang-en='"Catch provides a safe and supportive environment where my child can grow physically stronger and build confidence. The coaches don’t just teach techniques — they genuinely care about the kids’ emotional growth and well-being. As the saying goes, it takes a village to raise a child — and for us, Catch is that village."' data-lang-zh='「Catch 提供了一個安全且充滿支持的環境，我的孩子在這裡不僅身體更強壯，也建立了自信。教練們不只教技術，他們真正關心孩子們的情感成長和福祉。俗話說，養育一個孩子需要整個村莊的力量——對我們來說，Catch 就是那個村莊。」'>
+                                "Catch provides a safe and supportive environment where my child can grow physically stronger and build confidence. The coaches don’t just teach techniques — they genuinely care about the kids’ emotional growth and well-being. As the saying goes, it takes a village to raise a child — and for us, Catch is that village."
+                            </p>
+                            <p class="mt-4 font-bold text-right text-indigo-800 lang" data-lang-en="- Roxie, Parent" data-lang-zh="- Roxie，家長">- Roxie, Parent</p>
+                        </div>
+                        <div class="bg-teal-50 p-6 rounded-xl border-l-4 border-teal-500">
+                            <p class="text-gray-700 italic lang" data-lang-en='"The bilingual learning environment has improved my child&apos;s tolerance for frustration... Through international competitions, they meet friends from other gyms, learn from each other, improve their skills, and expand their international perspective. It&apos;s a rare and valuable learning environment."' data-lang-zh='「雙語的學習環境提升了我孩子的挫折容忍力...透過國際競賽認識各道館的朋友，互相學習，精進自我技術，可提前擴展孩子的國際觀，認識不同國家的朋友，進而交流，是很難得的學習環境。」'>
+                                "The bilingual learning environment has improved my child's tolerance for frustration... Through international competitions, they meet friends from other gyms, learn from each other, improve their skills, and expand their international perspective. It's a rare and valuable learning environment."
+                            </p>
+                            <p class="mt-4 font-bold text-right text-teal-800 lang" data-lang-en="- 陳加/陳億, Parent" data-lang-zh="- 陳加/陳億，家長">- 陳加/陳億, Parent</p>
+                        </div>
+                        <div class="bg-pink-50 p-6 rounded-xl border-l-4 border-pink-500">
+                             <p class="text-gray-700 italic lang" data-lang-en='"Want your child to be brave, confident, and have great stamina without just fighting? Then come to CATCH Jiu Jitsu! They learn self-discipline while rolling, build muscle while laughing, and most importantly, they burn off so much energy that parents can finally enjoy a quiet cup of hot coffee."' data-lang-zh='「想讓孩子變勇敢、有自信、體力好又不亂揍人？那就來 CATCH 柔術！在翻滾中學自律、在笑聲中練肌力，重點是放電效果超強，爸媽終於可以安靜喝完一杯熱咖啡。」'>
+                                 "Want your child to be brave, confident, and have great stamina without just fighting? Then come to CATCH Jiu Jitsu! They learn self-discipline while rolling, build muscle while laughing, and most importantly, they burn off so much energy that parents can finally enjoy a quiet cup of hot coffee."
+                             </p>
+                             <p class="mt-4 font-bold text-right text-pink-800 lang" data-lang-en="- Melody, Parent" data-lang-zh="- Melody，家長">- Melody, Parent</p>
+                        </div>
+                        <div class="bg-orange-50 p-6 rounded-xl border-l-4 border-orange-500">
+                             <p class="text-gray-700 italic lang" data-lang-en='"The Catch community is highly supportive and friendly - they can achieve both as individuals and as a team - it’s great! My son takes this focused fun approach to all he does now."' data-lang-zh='「Catch 的社群非常支持和友善——孩子們既能作為個體成長，也能作為團隊的一份子取得成就——這太棒了！我的兒子現在把他從這裡學到的『專注の樂趣』帶入到他所做的每一件事中。」'>
+                                 "The Catch community is highly supportive and friendly - they can achieve both as individuals and as a team - it’s great! My son takes this focused fun approach to all he does now."
+                             </p>
+                             <p class="mt-4 font-bold text-right text-orange-800 lang" data-lang-en="- Jacob L., Parent" data-lang-zh="- Jacob L.，家長">- Jacob L., Parent</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="gallery" class="bg-white p-8 rounded-2xl shadow-md transition hover:shadow-xl">
+                    <h2 class="text-3xl font-bold text-gray-800 border-b-4 border-cyan-500 pb-2 inline-block lang" data-lang-en="A Day at Catch" data-lang-zh="Catch 的一天">A Day at Catch</h2>
+                    <div id="gallery-grid" class="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        </div>
+                </section>
+
+                <!-- ================================================== -->
+                <!-- ============ NEW FAQ SECTION START =============== -->
+                <!-- ================================================== -->
+                <section id="faq" class="bg-white p-8 rounded-2xl shadow-md transition hover:shadow-xl">
+                    <h2 class="text-3xl font-bold text-gray-800 border-b-4 border-fuchsia-500 pb-2 inline-block lang" data-lang-en="Frequently Asked Questions" data-lang-zh="常見問題">Frequently Asked Questions</h2>
+                    <div class="mt-6 space-y-4">
+                        <!-- FAQ Item 1 -->
+                        <div class="border-b border-gray-200 pb-4">
+                            <div class="flex justify-between items-center cursor-pointer faq-question text-gray-800 hover:text-blue-600">
+                                <h4 class="text-lg font-semibold lang" data-lang-en="What is Brazilian Jiu Jitsu (BJJ)?" data-lang-zh="什麼是巴西柔術 (BJJ)？">What is Brazilian Jiu Jitsu (BJJ)?</h4>
+                                <span class="text-gray-500 text-3xl font-bold faq-icon">+</span>
+                            </div>
+                            <div class="faq-answer mt-2 text-gray-600 text-sm lang" data-lang-en="BJJ is a martial art and combat sport that focuses on grappling and ground fighting. It teaches that a smaller, weaker person can successfully defend against a bigger, stronger assailant by using leverage and proper technique, especially by applying joint-locks and chokeholds to submit the opponent." data-lang-zh="巴西柔術是一種武術和搏擊運動，專注於擒抱和地面格鬥。它教導較小、較弱的人如何利用槓桿原理和適當的技術，特別是通過施加關節鎖和絞技來制服對手，從而成功地對抗比自己大、比自己強的攻擊者。"></div>
+                        </div>
+                        <!-- FAQ Item 2 -->
+                        <div class="border-b border-gray-200 pb-4">
+                            <div class="flex justify-between items-center cursor-pointer faq-question text-gray-800 hover:text-blue-600">
+                                <h4 class="text-lg font-semibold lang" data-lang-en="Will my child get hurt?" data-lang-zh="我的孩子會受傷嗎？">Will my child get hurt?</h4>
+                                <span class="text-gray-500 text-3xl font-bold faq-icon">+</span>
+                            </div>
+                            <div class="faq-answer mt-2 text-gray-600 text-sm lang" data-lang-en="Safety is our top priority. Our instructors are highly trained to ensure all techniques are taught in a controlled, safe environment. We use padded mats, and our 'rolling' (sparring) sessions are closely supervised. We focus on control and technique, not on strength or aggression, to minimize risk." data-lang-zh="安全是我們的首要任務。我們的教練都經過嚴格訓練，確保所有技術都在受控、安全的環境中教授。我們使用軟墊，並且我們的「滾動」（對打）課程都受到嚴格監督。我們專注於控制和技術，而不是力量或攻擊性，以最大限度地降低風險。"></div>
+                        </div>
+                        <!-- FAQ Item 3 -->
+                        <div class="border-b border-gray-200 pb-4">
+                            <div class="flex justify-between items-center cursor-pointer faq-question text-gray-800 hover:text-blue-600">
+                                <h4 class="text-lg font-semibold lang" data-lang-en="What should my child wear to class?" data-lang-zh="我的孩子上課應該穿什麼？">What should my child wear to class?</h4>
+                                <span class="text-gray-500 text-3xl font-bold faq-icon">+</span>
+                            </div>
+                            <div class="faq-answer mt-2 text-gray-600 text-sm lang" data-lang-en="For the first trial class, comfortable athletic clothing (without zippers or buttons) is perfect. After joining, students will need a Gi (the traditional uniform for BJJ), which can be purchased at our gym." data-lang-zh="對於第一次試聽課，穿著舒適的運動服（沒有拉鍊或鈕扣）即可。加入後，學生需要一套柔術服（BJJ的傳統制服），可以在我們的道館購買。"></div>
+                        </div>
+                        <!-- FAQ Item 4 -->
+                        <div class="border-b border-gray-200 pb-4">
+                            <div class="flex justify-between items-center cursor-pointer faq-question text-gray-800 hover:text-blue-600">
+                                <h4 class="text-lg font-semibold lang" data-lang-en="Will BJJ make my child more aggressive?" data-lang-zh="巴西柔術會讓我的孩子變得更有攻擊性嗎？">Will BJJ make my child more aggressive?</h4>
+                                <span class="text-gray-500 text-3xl font-bold faq-icon">+</span>
+                            </div>
+                            <div class="faq-answer mt-2 text-gray-600 text-sm lang" data-lang-en="The opposite is true. Martial arts like BJJ instill discipline, respect, and self-control. Students learn to handle conflict in a controlled environment and develop the confidence to avoid fights, not seek them out. The focus is on using intelligence and technique to de-escalate situations." data-lang-zh="事實正好相反。像巴西柔術這樣的武術灌輸紀律、尊重和自我控制。學生學習如何在受控的環境中處理衝突，並培養自信心以避免打架，而不是尋求打鬥。重點是運用智慧和技術來緩和局勢。"></div>
+                        </div>
+                        <!-- New FAQ Item 5 -->
+                        <div class="border-b border-gray-200 pb-4">
+                            <div class="flex justify-between items-center cursor-pointer faq-question text-gray-800 hover:text-blue-600">
+                                <h4 class="text-lg font-semibold lang" data-lang-en="What are the benefits of BJJ for children?" data-lang-zh="巴西柔術對兒童有什麼好處？">What are the benefits of BJJ for children?</h4>
+                                <span class="text-gray-500 text-3xl font-bold faq-icon">+</span>
+                            </div>
+                            <div class="faq-answer mt-2 text-gray-600 text-sm lang" data-lang-en="BJJ offers a wide range of benefits for children, including improved physical fitness, coordination, and strength. Mentally, it boosts confidence, teaches discipline, and enhances problem-solving skills. It also provides a safe outlet for children to burn energy and develop social skills with their peers and coaches." data-lang-zh="巴西柔術為兒童帶來廣泛的好處，包括提升體能、協調性和力量。在心智上，它能增強自信、培養紀律，並提高解決問題的能力。它還為孩子們提供了一個安全的管道來消耗精力，並與同儕和教練建立社交技能。"></div>
+                        </div>
+                        <!-- New FAQ Item 6 -->
+                        <div class="border-b border-gray-200 pb-4">
+                            <div class="flex justify-between items-center cursor-pointer faq-question text-gray-800 hover:text-blue-600">
+                                <h4 class="text-lg font-semibold lang" data-lang-en="What is the minimum age to start?" data-lang-zh="最低的開始年齡是多少？">What is the minimum age to start?</h4>
+                                <span class="text-gray-500 text-3xl font-bold faq-icon">+</span>
+                            </div>
+                            <div class="faq-answer mt-2 text-gray-600 text-sm lang" data-lang-en="We have programs specifically designed for children as young as 5 years old. Our Youth Grapplers class focuses on fundamental movements and is tailored for their age group, making it a perfect starting point." data-lang-zh="我們為年齡小至5歲的兒童設計了專門的課程。我們的幼年擒抱者課程專注於基本動作，並為他們的年齡量身定制，是一個完美的起點。"></div>
+                        </div>
+                        <!-- New FAQ Item 7 -->
+                        <div class="border-b border-gray-200 pb-4">
+                            <div class="flex justify-between items-center cursor-pointer faq-question text-gray-800 hover:text-blue-600">
+                                <h4 class="text-lg font-semibold lang" data-lang-en="How long does it take to get a black belt?" data-lang-zh="獲得黑帶需要多長時間？">How long does it take to get a black belt?</h4>
+                                <span class="text-gray-500 text-3xl font-bold faq-icon">+</span>
+                            </div>
+                            <div class="faq-answer mt-2 text-gray-600 text-sm lang" data-lang-en="The path to black belt is a long and rewarding journey that takes many years of consistent training and dedication. For children, the belt system progresses through a series of colored belts (white, grey, yellow, orange, green) before they transition to the adult system. The focus is on learning and growth, not on the rank itself." data-lang-zh="通往黑帶的道路是一段漫長且充滿回報的旅程，需要多年的持續訓練和奉獻。對於兒童來說，腰帶系統會先經歷一系列有色腰帶（白、灰、黃、橙、綠），然後再過渡到成人系統。我們注重的是學習和成長，而不是腰帶本身。"></div>
+                        </div>
+                        <!-- New FAQ Item 8 -->
+                        <div class="border-b border-gray-200 pb-4">
+                            <div class="flex justify-between items-center cursor-pointer faq-question text-gray-800 hover:text-blue-600">
+                                <h4 class="text-lg font-semibold lang" data-lang-en="Does my child have to compete?" data-lang-zh="我的孩子一定要參加比賽嗎？">Does my child have to compete?</h4>
+                                <span class="text-gray-500 text-3xl font-bold faq-icon">+</span>
+                            </div>
+                            <div class="faq-answer mt-2 text-gray-600 text-sm lang" data-lang-en="No, competition is entirely optional. We have many students who train purely for fitness, self-defense, and fun. For those who are interested, we offer competition-specific training and coaching to prepare them for tournaments in a supportive and low-pressure environment." data-lang-zh="不，比賽完全是可選的。我們有很多學生純粹為了健身、自衛和樂趣而訓練。對於那些感興趣的孩子，我們提供專門的比賽訓練和指導，在一個支持性和低壓力的環境中為他們準備比賽。"></div>
+                        </div>
+                        <!-- New FAQ Item 9 -->
+                        <div class="border-b border-gray-200 pb-4">
+                            <div class="flex justify-between items-center cursor-pointer faq-question text-gray-800 hover:text-blue-600">
+                                <h4 class="text-lg font-semibold lang" data-lang-en="What if my child is shy or not athletic?" data-lang-zh="如果我的孩子很害羞或不愛運動怎麼辦？">What if my child is shy or not athletic?</h4>
+                                <span class="text-gray-500 text-3xl font-bold faq-icon">+</span>
+                            </div>
+                            <div class="faq-answer mt-2 text-gray-600 text-sm lang" data-lang-en="BJJ is perfect for children who may be shy or lack confidence. It provides a structured, one-on-one environment for sparring that can help them overcome shyness and learn to interact with others respectfully. Our program builds confidence and physical literacy from the ground up, so no prior athletic ability is required." data-lang-zh="巴西柔術非常適合可能害羞或缺乏自信的孩子。它提供了一個結構化、一對一的對打環境，可以幫助他們克服害羞，並學會尊重地與他人互動。我們的課程從零開始建立自信和身體素養，所以不需要任何先前的運動能力。"></div>
+                        </div>
+                        <!-- New FAQ Item 10 -->
+                        <div class="border-b border-gray-200 pb-4">
+                            <div class="flex justify-between items-center cursor-pointer faq-question text-gray-800 hover:text-blue-600">
+                                <h4 class="text-lg font-semibold lang" data-lang-en="How is BJJ different from other martial arts like Karate or Taekwondo?" data-lang-zh="巴西柔術與空手道或跆拳道等其他武術有何不同？">How is BJJ different from other martial arts like Karate or Taekwondo?</h4>
+                                <span class="text-gray-500 text-3xl font-bold faq-icon">+</span>
+                            </div>
+                            <div class="faq-answer mt-2 text-gray-600 text-sm lang" data-lang-en="The primary difference is the focus. While striking arts like Karate and Taekwondo focus on kicks and punches, BJJ is a grappling art that specializes in takedowns and ground fighting. It emphasizes using leverage and technique to control and submit an opponent, making it highly effective for self-defense and a unique skill set to develop." data-lang-zh="主要區別在於重點。空手道和跆拳道等打擊類武術主要專注於踢腿和拳擊，而巴西柔術是一種擒抱類武術，專精於摔倒和地面格鬥。它強調利用槓桿和技術來控制並制服對手，使其在自衛方面非常有效，並能發展出一套獨特的技能。"></div>
+                        </div>
+                    </div>
+                </section>
+                <!-- ================================================== -->
+                <!-- ============ NEW FAQ SECTION END ================= -->
+                <!-- ================================================== -->
+
+            </div>
+
+            <aside class="space-y-8">
+                <div class="bg-white p-6 text-center rounded-2xl shadow-md transition hover:shadow-xl">
+                    <img src="IMG_8762.jpg" alt="Head Instructor Dan Reid" class="w-32 h-32 rounded-full mx-auto shadow-lg border-4 border-white object-cover" onerror="this.onerror=null;this.src='https://placehold.co/128x128/e0e0e0/333333?text=Dan';">
+                    <h3 class="mt-4 text-2xl font-bold text-gray-800 lang" data-lang-en="Coach Dan Reid" data-lang-zh="丹・里德教練">Coach Dan Reid</h3>
+                    <p class="text-gray-600 font-semibold lang" data-lang-en="Head Instructor" data-lang-zh="總教練">Head Instructor</p>
+                    <div class="mt-4 space-y-2 text-left">
+                        <p class="bg-gray-100 p-2 rounded-lg text-sm flex items-center justify-center lang" data-lang-en="3rd Degree BJJ Black Belt" data-lang-zh="巴西柔術黑帶三段">3rd Degree BJJ Black Belt</p>
+                        <p class="bg-gray-100 p-2 rounded-lg text-sm flex items-center justify-center lang" data-lang-en="Black Belt in Judo" data-lang-zh="柔道黑帶">Black Belt in Judo</p>
+                    </div>
+                    <p class="mt-4 text-sm text-gray-500 italic lang" data-lang-en='"With years of experience, Coach Dan provides world-class instruction in a way that is both fun and effective for kids."' data-lang-zh="「憑藉多年的經驗，丹教練以一種既有趣又有效的方式為孩子們提供世界一流的指導。」">
+                        "With years of experience, Coach Dan provides world-class instruction in a way's both fun and effective for kids."
+                    </p>
+                </div>
+
+                <div class="bg-gradient-to-br from-blue-500 to-purple-600 text-white p-8 rounded-2xl shadow-lg text-center">
+                    <h3 id="class-count-text" class="text-3xl font-black lang" data-lang-en="Loading class count..." data-lang-zh="正在加載課程數量...">Loading class count...</h3>
+                    <p class="mt-2 text-lg font-semibold lang" data-lang-en="Action-packed and convenient for your schedule." data-lang-zh="內容豐富，方便您的日程安排。">Action-packed and convenient for your schedule.</p>
+                    <button id="open-schedule-modal" class="mt-6 inline-block bg-white text-blue-600 font-bold py-3 px-6 rounded-xl shadow-md transition hover:bg-gray-100 hover:scale-105 lang" data-lang-en="View Full Schedule" data-lang-zh="查看完整課表">
+                        View Full Schedule
+                    </button>
+                </div>
+            </aside>
+        </main>
+
+        <section id="contact" class="mt-16 text-center bg-white p-10 rounded-2xl shadow-md">
+            <h2 class="text-3xl font-bold text-gray-800 lang" data-lang-en="Ready to Join the Fun?" data-lang-zh="準備好加入樂趣了嗎？">Ready to Join the Fun?</h2>
+            <p class="mt-2 text-gray-600 max-w-2xl mx-auto lang" data-lang-en="Sign up for a free trial class today and see why kids and parents love Catch Jiu Jitsu. No experience necessary!" data-lang-zh="立即報名參加免費試聽課程，看看為什麼孩子和家長都喜歡 Catch 柔術。無需任何經驗！">
+                Sign up for a free trial class today and see why kids and parents love Catch Jiu Jitsu. No experience necessary!
+            </p>
+            <button id="open-contact-modal-bottom" class="mt-6 bg-purple-600 text-white font-bold py-4 px-8 rounded-xl shadow-lg transition hover:bg-purple-700 hover:scale-105 lang" data-lang-en="Book a Free Trial Class" data-lang-zh="預約免費試聽課">
+                Book a Free Trial Class
+            </button>
+        </section>
+    </div>
+
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="container mx-auto px-4 text-center">
+            <h3 class="text-2xl font-bold mb-4 lang" data-lang-en="Follow Us" data-lang-zh="追蹤我們">Follow Us</h3>
+            <div class="max-w-xl mx-auto">
+                <p class="text-gray-400 mb-2 lang" data-lang-en="Catch Jiu Jitsu" data-lang-zh="Catch柔術">Catch Jiu Jitsu</p>
+                <p class="text-gray-400 mb-6 lang" data-lang-en="3F, No. 79, Jhonghua 3rd Rd, Qianjin District, Kaohsiung City, 801" data-lang-zh="801高雄市前金區中華三路79號3樓">3樓, No. 79, Jhonghua 3rd Rd, Qianjin District, Kaohsiung City, 801</p>
+            </div>
+            <div class="flex justify-center space-x-6">
+                <a href="https://www.facebook.com/catchjiujitsu" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:opacity-80 transition" aria-label="Facebook">
+                    <img src="facebook.png" alt="Facebook" class="w-8 h-8">
+                </a>
+                <a href="https://www.instagram.com/catchjiujitsu" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:opacity-80 transition" aria-label="Instagram">
+                    <img src="instagram.png" alt="Instagram" class="w-8 h-8">
+                </a>
+                <a href="https://line.me/R/ti/p/@catchjiujitsu" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:opacity-80 transition" aria-label="Line">
+                    <img src="line.png" alt="Line" class="w-8 h-8">
+                </a>
+            </div>
+            <div class="mt-8 pt-8 border-t border-gray-700 text-sm text-gray-500">
+                <p>&copy; <span id="current-year"></span> Catch Jiu Jitsu. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+
+    <!-- ==================================================== -->
+    <!-- ===== NEW INTERACTIVE SCHEDULE MODAL START ======= -->
+    <!-- ==================================================== -->
+    <div id="schedule-modal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-7xl max-h-[90vh] flex flex-col">
+            <header class="flex items-center justify-between p-4 border-b">
+                <h3 id="schedule-modal-title" class="text-2xl font-bold"></h3>
+                <button id="close-schedule-modal" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
+            </header>
+            
+            <!-- Age Selector for Schedule -->
+            <div class="p-4 border-b flex items-center justify-center space-x-2">
+                <div id="schedule-age-selector" class="inline-flex rounded-md shadow-sm" role="group">
+                    <button type="button" data-age="Adult" class="schedule-age-btn px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-l-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-500">
+                        <span class="lang" data-lang-en="Adult" data-lang-zh="成人">Adult</span>
+                    </button>
+                    <button type="button" data-age="Kid" class="schedule-age-btn px-4 py-2 text-sm font-medium text-white bg-blue-600 border-t border-b border-r border-gray-200 hover:bg-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-500">
+                        <span class="lang" data-lang-en="Kids" data-lang-zh="兒童">Kids</span>
+                    </button>
+                </div>
+            </div>
+    
+            <div id="schedule-grid-container" class="p-2 sm:p-4 overflow-auto timetable-container">
+                <!-- Schedule will be rendered here by JS -->
+                <div class="text-center p-8 text-gray-500">Loading schedule...</div>
+            </div>
+        </div>
+    </div>
+    <!-- ================================================== -->
+    <!-- ===== NEW INTERACTIVE SCHEDULE MODAL END ========= -->
+    <!-- ================================================== -->
+    
+    <div id="contact-modal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col">
+            <header class="flex items-center justify-between p-4 border-b">
+                <h3 class="text-2xl font-bold lang" data-lang-en="Book a Free Trial" data-lang-zh="預約免費試聽課">Book a Free Trial</h3>
+                <button id="close-contact-modal" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
+            </header>
+            <div id="form-container" class="p-6 overflow-auto">
+                <form id="contact-form" action="https://formspree.io/f/xdkdoqyz" method="POST" class="space-y-4">
+                    <input type="hidden" name="_next" value="thanks.html">
+                    <div>
+                        <label for="name" class="block mb-2 text-sm font-medium text-gray-900 lang" data-lang-en="Name" data-lang-zh="姓名">Name</label>
+                        <input type="text" id="name" name="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                    </div>
+                    <div>
+                        <label for="age" class="block mb-2 text-sm font-medium text-gray-900 lang" data-lang-en="Age" data-lang-zh="年齡">Age</label>
+                        <input type="number" id="age" name="age" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                    </div>
+                    <div>
+                        <label for="phone" class="block mb-2 text-sm font-medium text-gray-900 lang" data-lang-en="Phone Number" data-lang-zh="電話號碼">Phone Number</label>
+                        <input type="tel" id="phone" name="phone" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                    </div>
+                    <div>
+                        <label for="line-id" class="block mb-2 text-sm font-medium text-gray-900 lang" data-lang-en="Line ID" data-lang-zh="Line ID">Line ID</label>
+                        <input type="text" id="line-id" name="line_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                    </div>
+                    <div>
+                        <label for="email" class="block mb-2 text-sm font-medium text-gray-900 lang" data-lang-en="Email" data-lang-zh="電子郵件">Email</label>
+                        <input type="email" id="email" name="email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                    </div>
+                    <button type="submit" class="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center lang" data-lang-en="Submit Request" data-lang-zh="提交請求">Submit Request</button>
+                </form>
+                <div id="form-status" class="hidden mt-4 text-center">
+                    <p id="form-status-message" class="text-lg font-semibold"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="gallery-modal" class="modal fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-80 p-4 hidden">
+        <button id="close-gallery-modal" class="absolute top-4 right-4 text-white text-5xl font-bold z-10">&times;</button>
+        <button id="prev-image" class="absolute left-4 text-white text-5xl font-bold z-10">&lsaquo;</button>
+        <button id="next-image" class="absolute right-4 text-white text-5xl font-bold z-10">&rsaquo;</button>
+        <div class="relative w-full h-full flex items-center justify-center">
+            <img id="lightbox-image" src="" alt="Gallery image" class="max-w-[90vw] max-h-[90vh] object-contain">
+        </div>
+    </div>
+    
+    <div id="dan-modal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <header class="flex items-center justify-between p-4 border-b">
+                <div>
+                    <h3 class="text-2xl font-bold">Dan Reid</h3>
+                    <p class="text-sm text-gray-500 lang" data-lang-en="Head Coach" data-lang-zh="總教練">Head Coach</p>
+                </div>
+                <button id="close-dan-modal" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
+            </header>
+            <div class="p-6 overflow-auto">
+                <p class="lang mb-6" data-lang-en="Coach Dan has been training Jiu Jitsu for 17 years and has actively competed throughout his career. Most recently winning the Marianas Pro in Taiwan at black belt. As well as a long and sucessul Jiu Jitsu career Dan also is an undefeated MMA fighter with a record of 5-0. Despite his competition sucess it is as a coach that he really shines, known for training some of the best combat sports athletes in the Country." data-lang-zh="Dan教練練習柔術已有17年，並在他的職業生涯中積極參賽。最近，他在台灣的Marianas Pro黑帶組比賽中獲勝。除了漫長而成功的柔術生涯外，Dan也是一位不敗的綜合格鬥選手，戰績為5勝0負。儘管他在比賽中取得了成功，但作為一名教練，他才真正大放異彩，以訓練國內一些最優秀的格鬥運動員而聞名。">Coach Dan has been training Jiu Jitsu for 17 years and has actively competed throughout his career. Most recently winning the Marianas Pro in Taiwan at black belt. As well as a long and sucessul Jiu Jitsu career Dan also is an undefeated MMA fighter with a record of 5-0. Despite his competition sucess it is as a coach that he really shines, known for training some of the best combat sports athletes in the Country.</p>
+                <div class="grid grid-cols-3 gap-4">
+                    <img src="dan-comp.jpg" alt="Dan in action" class="rounded-lg object-cover w-full h-full">
+                    <img src="dan-2.jpg" alt="Dan coaching" class="rounded-lg object-cover w-full h-full">
+                    <img src="dan-3.jpg" alt="Dan with students" class="rounded-lg object-cover w-full h-full">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="steven-modal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <header class="flex items-center justify-between p-4 border-b">
+                <div>
+                    <h3 class="text-2xl font-bold">Steven Lee</h3>
+                    <p class="text-sm text-gray-500 lang" data-lang-en="Judo black belt / Jiu Jitsu blue belt" data-lang-zh="柔道黑帶 / 巴西柔術藍帶">Judo black belt / Jiu Jitsu blue belt</p>
+                </div>
+                <button id="close-steven-modal" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
+            </header>
+            <div class="p-6 overflow-auto">
+                <p class="lang mb-6" data-lang-en="Steven has been practicing judo for over a decade. After being introduced to it in junior high, he embarked on the path of a competitive athlete. Along this journey, he has won national championships and represented his country multiple times. However, for him, the most important aspect of judo is the etiquette it has taught him and the correct mindset it has instilled in him for facing life. Judo emphasizes Maximum Efficiency, Mutual Welfare and Benefit, and Yi-Xiang hopes to pass on the spirit of this motto to the children who attend his classes, fostering not only physical fitness but also mental well-being, allowing both mind and body to grow together." data-lang-zh="義翔練習柔道已經十餘年。從國中開始接觸後，他便踏上了選手的這條路。在這條路上，他拿過全國賽的冠軍，也當過幾次國手。然而，對他而言最重要的還是柔道教會了他許多的禮儀，也帶給了他面對人生應有的正確心態。柔道講求「精力善用，自他共榮」，義翔希望可以把這句話的精神傳遞給來上他的課的小朋友們，不只健身也健心，讓身心一起成長。">Steven has been practicing judo for over a decade. After being introduced to it in junior high, he embarked on the path of a competitive athlete. Along this journey, he has won national championships and represented his country multiple times. However, for him, the most important aspect of judo is the etiquette it has taught him and the correct mindset it has instilled in him for facing life. Judo emphasizes "Maximum Efficiency, Mutual Welfare and Benefit," and Yi-Xiang hopes to pass on the spirit of this motto to the children who attend his classes, fostering not only physical fitness but also mental well-being, allowing both mind and body to grow together.</p>
+                <div class="grid grid-cols-3 gap-4">
+                    <img src="steven-comp.jpg" alt="Steven in action" class="rounded-lg object-cover w-full h-full">
+                    <img src="steven-warm.jpg" alt="Steven coaching" class="rounded-lg object-cover w-full h-full">
+                    <img src="steven3.jpg" alt="Steven with students" class="rounded-lg object-cover w-full h-full">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="xiaoniu-modal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <header class="flex items-center justify-between p-4 border-b">
+               <div>
+                    <h3 class="text-2xl font-bold">Xiaoniu</h3>
+                    <p class="text-sm text-gray-500 lang" data-lang-en="Wrestling Coach" data-lang-zh="摔跤教練">Wrestling Coach</p>
+               </div>
+                <button id="close-xiaoniu-modal" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
+            </header>
+            <div class="p-6 overflow-auto">
+                <p class="lang mb-6" data-lang-en="Coach Xiaoniu is a true Mixed Martial artist, having competed and won in many different styles. Xiaoniu is a 2 time national combat Jiu Jitsu Champion (earning a place in the national team) and runner up for national Jiu Jitsu championships. He is also an active MMA fighter as well as having competed in Kick boxing and Sanda. He is also Kaohsiung City wrestling champion and is known for his powerful takedowns." data-lang-zh="小牛教練是一位真正的綜合格鬥家，曾在多種不同風格的比賽中獲勝。小牛是兩屆全國搏擊柔術冠軍（並入選國家隊），也是全國柔術錦標賽的亞軍。他還是一名活躍的綜合格鬥選手，並曾參加過踢拳和散打比賽。他也是高雄市的摔跤冠軍，以其強力的摔法而聞名。">Coach Xiaoniu is a true Mixed Martial artist, having competed and won in many different styles. Xiaoniu is a 2 time national combat Jiu Jitsu Champion (earning a place in the national team) and runner up for national Jiu Jitsu championships. He is also an active MMA fighter as well as having competed in Kick boxing and Sanda. He is also Kaohsiung City wrestling champion and is known for his powerful takedowns.</p>
+                 <div class="grid grid-cols-3 gap-4">
+                     <img src="xiaoniu-comp.jpg" alt="Xiaoniu in action" class="rounded-lg object-cover w-full h-full">
+                     <img src="xiaoniu-comp2.jpg" alt="Xiaoniu coaching" class="rounded-lg object-cover w-full h-full">
+                     <img src="xiaoniu-comp3.jpg" alt="Xiaoniu with students" class="rounded-lg object-cover w-full h-full">
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="youth-modal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <header class="flex items-center justify-between p-4 border-b">
+                <div>
+                    <h3 class="text-2xl font-bold lang" data-lang-en="Youth Grapplers (5-8 yrs)" data-lang-zh="幼年擒抱者 (5-8 歲)">Youth Grapplers (5-8 yrs)</h3>
+                    <p class="text-sm text-gray-500 lang" data-lang-en="Building Foundational Skills" data-lang-zh="建立基礎技能">Building Foundational Skills</p>
+                </div>
+                <button id="close-youth-modal" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
+            </header>
+            <div class="p-6 overflow-auto">
+                <p class="lang mb-6" data-lang-en="Our Youth Grapplers program is all about building a love for martial arts through fun and games. We focus on developing essential motor skills, balance, and coordination in a safe, playful environment. Children learn the very basics of Jiu Jitsu concepts like control and position, which builds their confidence and teaches them discipline and respect for their training partners and coaches." data-lang-zh="我們的幼年擒抱者課程旨在通過趣味和遊戲培養對武術的熱愛。我們專注於在安全、有趣的環境中發展基本的運動技能、平衡感和協調能力。孩子們學習柔術最基本的概念，如控制和位置，這有助於建立他們的自信心，並教導他們紀律以及對訓練夥伴和教練的尊重。"></p>
+                <div class="grid grid-cols-3 gap-4">
+                    <img src="https://placehold.co/400x400/a0c4ff/333333?text=Fun+Games" alt="Youth class fun" class="rounded-lg object-cover w-full h-full" onerror="this.onerror=null;this.src='https://placehold.co/400x400/e0e0e0/333333?text=Image';">
+                    <img src="https://placehold.co/400x400/a0c4ff/333333?text=Learning" alt="Youth class learning" class="rounded-lg object-cover w-full h-full" onerror="this.onerror=null;this.src='https://placehold.co/400x400/e0e0e0/333333?text=Image';">
+                    <img src="https://placehold.co/400x400/a0c4ff/333333?text=Teamwork" alt="Youth class teamwork" class="rounded-lg object-cover w-full h-full" onerror="this.onerror=null;this.src='https://placehold.co/400x400/e0e0e0/333333?text=Image';">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="junior-modal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <header class="flex items-center justify-between p-4 border-b">
+                <div>
+                    <h3 class="text-2xl font-bold lang" data-lang-en="Junior Grapplers (9-15 yrs)" data-lang-zh="少年擒抱者 (9-15 歲)">Junior Grapplers (9-15 yrs)</h3>
+                    <p class="text-sm text-gray-500 lang" data-lang-en="Developing Advanced Techniques" data-lang-zh="發展高級技術">Developing Advanced Techniques</p>
+                </div>
+                <button id="close-junior-modal" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
+            </header>
+            <div class="p-6 overflow-auto">
+                <p class="lang mb-6" data-lang-en="The Junior Grapplers class takes the foundational skills to the next level. In this program, students delve deeper into the techniques of BJJ, Judo, and Wrestling. We introduce controlled, live sparring (rolling) to help them apply what they've learned in a dynamic setting. This class strongly emphasizes sportsmanship, problem-solving under pressure, and building the resilience needed for competition and life." data-lang-zh="少年擒抱者課程將基礎技能提升到一個新的水平。在這個課程中，學生們將更深入地學習巴西柔術、柔道和摔跤的技術。我們引入了受控的實戰對打（滾動），幫助他們在動態的環境中應用所學。這個課程特別強調體育精神、在壓力下解決問題的能力，以及為比賽和生活建立所需的韌性。"></p>
+                <div class="grid grid-cols-3 gap-4">
+                    <img src="https://placehold.co/400x400/c7b9ff/333333?text=Technique" alt="Junior class technique" class="rounded-lg object-cover w-full h-full" onerror="this.onerror=null;this.src='https://placehold.co/400x400/e0e0e0/333333?text=Image';">
+                    <img src="https://placehold.co/400x400/c7b9ff/333333?text=Sparring" alt="Junior class sparring" class="rounded-lg object-cover w-full h-full" onerror="this.onerror=null;this.src='https://placehold.co/400x400/e0e0e0/333333?text=Image';">
+                    <img src="https://placehold.co/400x400/c7b9ff/333333?text=Focus" alt="Junior class focus" class="rounded-lg object-cover w-full h-full" onerror="this.onerror=null;this.src='https://placehold.co/400x400/e0e0e0/333333?text=Image';">
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // A global object to hold the current language state
+            const currentLang = { value: 'en' }; 
+
+            // --- DOM Element References ---
+            const langElements = document.querySelectorAll('.lang');
+            const langEnDesktop = document.getElementById('lang-en-desktop');
+            const langZhDesktop = document.getElementById('lang-zh-desktop');
+            const langEnMobile = document.getElementById('lang-en-mobile');
+            const langZhMobile = document.getElementById('lang-zh-mobile');
+            const viewMoreBtns = document.querySelectorAll('.view-more-btn');
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const navLinks = document.querySelectorAll('.nav-link');
+            const contactForm = document.getElementById('contact-form');
+            const formStatus = document.getElementById('form-status');
+            const formStatusMessage = document.getElementById('form-status-message');
+            const galleryGrid = document.getElementById('gallery-grid');
+            const galleryModal = document.getElementById('gallery-modal');
+            const lightboxImage = document.getElementById('lightbox-image');
+            const closeGalleryBtn = document.getElementById('close-gallery-modal');
+            const prevBtn = document.getElementById('prev-image');
+            const nextBtn = document.getElementById('next-image');
+            const pricingDisplayContainer = document.getElementById('pricing-display-container');
+            const scheduleGridContainer = document.getElementById('schedule-grid-container');
+            const scheduleModalTitle = document.getElementById('schedule-modal-title');
+            const classCountText = document.getElementById('class-count-text');
+            const faqItems = document.querySelectorAll('.faq-question');
+            
+            // --- State Variables ---
+            let allPlans = [];
+            let allClasses = [];
+            let currentPricingFilter = { age: 'Kid', plan: '' }; // Default to Kid
+            let currentScheduleFilter = { age: 'Kid' }; // Default to Kid
+            let currentImageIndex = 0;
+            const galleryImages = [
+                'dan-comp.jpg', 'Untitled-2.jpg', '4a4f8e22-dd0b-494c-8c02-71b2b65d1a25.jpg',
+                '4c91677d-27ee-4e09-a2de-9176a97a56ff.jpg', 'e3e4346e-9a39-41e6-a9f4-63f4eff4edde.jpg', 'Untitled-1.jpg'
+            ];
+
+            // --- Language and UI Update Functions ---
+
+            // Updates the style of the language switcher buttons
+            function updateSwitcherStyles(lang) {
+                const enDesktopClasses = lang === 'en' ? 'font-bold text-blue-600' : 'font-normal text-gray-500 hover:text-blue-600';
+                const zhDesktopClasses = lang === 'zh' ? 'font-bold text-blue-600' : 'font-normal text-gray-500 hover:text-blue-600';
+                langEnDesktop.className = enDesktopClasses;
+                langZhDesktop.className = zhDesktopClasses;
+                langEnMobile.className = enDesktopClasses.replace('text-sm', 'text-base');
+                langZhMobile.className = zhDesktopClasses.replace('text-sm', 'text-base');
+            }
+
+            // The main function to set the language and re-render all dynamic content
+            function setLanguage(lang) {
+                currentLang.value = lang;
+                
+                // 1. Update all static elements with the .lang class
+                langElements.forEach(el => {
+                    const text = el.getAttribute(`data-lang-${lang}`);
+                    if (text) el.innerHTML = text;
+                });
+                
+                // 2. Update accordion button text based on their state
+                viewMoreBtns.forEach(btn => {
+                    const description = btn.parentElement.nextElementSibling;
+                    const key = description.classList.contains('hidden') ? `data-lang-${lang}` : `data-lang-${lang}-less`;
+                    btn.textContent = btn.getAttribute(key);
+                });
+
+                // 3. Update the switcher button styles
+                updateSwitcherStyles(lang);
+
+                // 4. Re-render the dynamic components with the new language
+                renderPricingUI();
+                renderScheduleUI();
+                renderClassCount();
+            }
+            
+            // --- Dynamic Content Rendering ---
+
+            function renderPricingUI() {
+                if (!allPlans.length) return;
+                
+                const pricingPlanSelector = document.getElementById('pricing-plan-selector');
+                
+                // 1. Filter plans by the currently selected age category
+                const availablePlans = allPlans.filter(p => p.category === currentPricingFilter.age);
+                
+                // 2. Get a unique list of plan names (groups) for the buttons
+                const uniquePlanGroups = [...new Set(availablePlans.map(p => p.plan_name))];
+
+                // 3. If the current plan isn't available for this age, select the first one as default
+                if (!uniquePlanGroups.includes(currentPricingFilter.plan)) {
+                    currentPricingFilter.plan = uniquePlanGroups[0] || '';
+                }
+
+                // 4. Render the plan type selector buttons
+                pricingPlanSelector.innerHTML = uniquePlanGroups.map(planGroup => {
+                    const isActive = planGroup === currentPricingFilter.plan;
+                    // Find the first plan in the group to get the Chinese name
+                    const planForName = availablePlans.find(p => p.plan_name === planGroup);
+                    const name = currentLang.value === 'zh' ? planForName.plan_name_zh : planGroup;
+                    const activeClasses = 'text-white bg-purple-600 hover:bg-purple-700';
+                    const inactiveClasses = 'text-gray-900 bg-white hover:bg-gray-100';
+                    return `<button type="button" data-plan="${planGroup}" class="pricing-plan-btn flex-grow px-4 py-2 text-sm font-medium border border-gray-200 rounded-lg focus:z-10 focus:ring-2 focus:ring-purple-500 ${isActive ? activeClasses : inactiveClasses}">${name}</button>`;
+                }).join('');
+
+                // 5. Filter for the specific options of the selected plan type
+                const selectedPlanOptions = availablePlans.filter(p => p.plan_name === currentPricingFilter.plan);
+                
+                if (selectedPlanOptions.length > 0) {
+                    // Get the main title for the selected plan
+                    const title = currentLang.value === 'zh' ? selectedPlanOptions[0].plan_name_zh : selectedPlanOptions[0].plan_name;
+                    
+                    // Generate the list of prices and descriptions
+                    const listItems = selectedPlanOptions.map(option => {
+                        const description = currentLang.value === 'zh' ? (option.description_zh || option.description) : option.description;
+                        const isSpecial = description.includes('!') || description.includes('！');
+                        const specialClasses = isSpecial ? 'bg-green-100 p-2 rounded-md' : '';
+                        return `<li class="flex justify-between items-center ${specialClasses}">
+                                    <span class="flex-grow pr-4">${description}</span>
+                                    <span class="font-bold text-lg">${parseInt(option.price).toLocaleString()}</span>
+                                </li>`;
+                    }).join('');
+
+                    pricingDisplayContainer.innerHTML = `
+                        <div class="bg-red-50 p-6 rounded-xl border-l-4 border-red-500">
+                            <h3 class="text-2xl font-bold text-red-800">${title}</h3>
+                            <ul class="mt-4 space-y-3 text-gray-700">${listItems}</ul>
+                        </div>`;
+                } else {
+                    pricingDisplayContainer.innerHTML = `<div class="text-center p-8 text-gray-500">${currentLang.value === 'en' ? 'No plans available for this selection.' : '此選項沒有可用的方案。'}</div>`;
+                }
+
+                // 6. Re-attach event listeners for the newly created plan buttons
+                document.querySelectorAll('.pricing-plan-btn').forEach(btn => {
+                    btn.addEventListener('click', handlePricingPlanChange);
+                });
+            }
+
+            function renderScheduleUI() {
+                if (!allClasses.length) return;
+
+                // 1. Update Modal Title based on language and selected age
+                const titleText = currentScheduleFilter.age === 'Kid' 
+                    ? (currentLang.value === 'en' ? "Kids Class Timetable" : "兒童課程時間表")
+                    : (currentLang.value === 'en' ? "Adults Class Timetable" : "成人課程時間表");
+                scheduleModalTitle.textContent = titleText;
+
+                // 2. Filter classes by age
+                const filteredClasses = allClasses.filter(c => c.age === currentScheduleFilter.age);
+
+                // 3. Group classes by day
+                const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+                const classesByDay = daysOfWeek.reduce((acc, day) => {
+                    acc[day] = filteredClasses.filter(c => c.day_of_week === day).sort((a,b) => a.start_time.localeCompare(b.start_time));
+                    return acc;
+                }, {});
+
+                // 4. Helper function for class card colors
+                const getClassCardColor = (className) => {
+                    const nameLower = className.toLowerCase();
+                    if (nameLower.includes('wrestling')) return 'bg-yellow-100';
+                    if (nameLower.includes('judo')) return 'bg-green-100';
+                    if (nameLower.includes('no-gi') || nameLower.includes('no gi')) return 'bg-purple-100';
+                    if (nameLower.includes('comp')) return 'bg-red-100';
+                    if (nameLower.includes('bjj') || nameLower.includes('beginners')) return 'bg-blue-100';
+                    return 'bg-gray-100';
+                };
+                
+                const dayTranslations = { en: daysOfWeek, zh: ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'] };
+
+                // 5. Build and render the schedule grid HTML
+                scheduleGridContainer.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-7 gap-1">
+                        ${daysOfWeek.map((day, index) => `
+                            <div class="border-b md:border-b-0 md:border-r p-2">
+                                <div class="font-bold text-center p-2 border-b-2 border-gray-200">${dayTranslations[currentLang.value][index]}</div>
+                                <div class="space-y-2 mt-2">
+                                    ${classesByDay[day].length > 0 ? classesByDay[day].map(c => `
+                                        <div class="${getClassCardColor(c.name)} p-2 rounded-lg text-sm">
+                                            <p class="font-bold">${currentLang.value === 'zh' ? c.name_zh : c.name}</p>
+                                            <p>${c.start_time} - ${c.end_time}</p>
+                                        </div>
+                                    `).join('') : `<div class="text-xs text-center text-gray-400 p-4">${currentLang.value === 'en' ? 'No classes' : '沒有課程'}</div>`}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            function renderClassCount() {
+                if (!allClasses.length) return;
+                const kidsClasses = allClasses.filter(c => c.age === 'Kid').length;
+                const adultClasses = allClasses.filter(c => c.age === 'Adult').length;
+                const totalClasses = kidsClasses + adultClasses;
+
+                if (currentLang.value === 'en') {
+                    classCountText.innerHTML = `${totalClasses} Classes Every Week!`;
+                    const subText = document.createElement('p');
+                    subText.className = 'text-base font-semibold mt-2';
+                    subText.textContent = `${adultClasses} for Adults, ${kidsClasses} for Kids`;
+                    classCountText.after(subText);
+                } else {
+                    classCountText.innerHTML = `每週 ${totalClasses} 堂課！`;
+                    const subText = document.createElement('p');
+                    subText.className = 'text-base font-semibold mt-2';
+                    subText.textContent = `成人 ${adultClasses} 堂，兒童 ${kidsClasses} 堂`;
+                    classCountText.after(subText);
+                }
+            }
+
+
+            // --- Event Handlers ---
+            function handlePricingAgeChange(e) {
+                const button = e.currentTarget;
+                currentPricingFilter.age = button.dataset.age;
+                
+                document.querySelectorAll('.pricing-age-btn').forEach(btn => {
+                    btn.classList.remove('bg-blue-600', 'text-white');
+                    btn.classList.add('bg-white', 'text-gray-900');
+                });
+                button.classList.add('bg-blue-600', 'text-white');
+                button.classList.remove('bg-white', 'text-gray-900');
+                
+                renderPricingUI();
+            }
+
+            function handlePricingPlanChange(e) {
+                currentPricingFilter.plan = e.currentTarget.dataset.plan;
+                renderPricingUI();
+            }
+
+            function handleScheduleAgeChange(e) {
+                const button = e.currentTarget;
+                currentScheduleFilter.age = button.dataset.age;
+
+                document.querySelectorAll('.schedule-age-btn').forEach(btn => {
+                    btn.classList.remove('bg-blue-600', 'text-white');
+                    btn.classList.add('bg-white', 'text-gray-900');
+                });
+                button.classList.add('bg-blue-600', 'text-white');
+                button.classList.remove('bg-white', 'text-gray-900');
+
+                renderScheduleUI();
+            }
+
+            // --- Data Fetching and Initialization ---
+            async function initializeDynamicContent() {
+                // Show loading indicators
+                pricingDisplayContainer.innerHTML = `<div class="text-center p-8 text-gray-500">${currentLang.value === 'en' ? 'Loading pricing...' : '正在加載價格...'}</div>`;
+                scheduleGridContainer.innerHTML = `<div class="text-center p-8 text-gray-500">${currentLang.value === 'en' ? 'Loading schedule...' : '正在加載課表...'}</div>`;
+
+                try {
+                    const [plansResponse, classesResponse] = await Promise.all([
+                        fetch('get_plans.php'),
+                        fetch('get_classes.php')
+                    ]);
+
+                    if (!plansResponse.ok) throw new Error(`Failed to fetch plans: ${plansResponse.statusText}`);
+                    allPlans = await plansResponse.json();
+
+                    if (!classesResponse.ok) throw new Error(`Failed to fetch classes: ${classesResponse.statusText}`);
+                    allClasses = await classesResponse.json();
+                    
+                    // Initial Render after successful fetch
+                    setLanguage(currentLang.value);
+
+                } catch (error) {
+                    console.error("Failed to fetch dynamic data:", error);
+                    pricingDisplayContainer.innerHTML = `<p class="text-center p-8 text-red-500">${currentLang.value === 'en' ? 'Error: Could not load pricing options from the database.' : '錯誤：無法從資料庫加載價格選項。'}</p>`;
+                    scheduleGridContainer.innerHTML = `<p class="text-center p-8 text-red-500">${currentLang.value === 'en' ? 'Error: Could not load the schedule from the database.' : '錯誤：無法從資料庫加載課表。'}</p>`;
+                }
+            }
+
+            // --- General Event Listeners Setup ---
+            
+            // Language switchers
+            langEnDesktop.addEventListener('click', () => setLanguage('en'));
+            langZhDesktop.addEventListener('click', () => setLanguage('zh'));
+            langEnMobile.addEventListener('click', () => setLanguage('en'));
+            langZhMobile.addEventListener('click', () => setLanguage('zh'));
+
+            // Mobile menu
+            mobileMenuButton.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+            navLinks.forEach(link => link.addEventListener('click', () => mobileMenu.classList.add('hidden')));
+
+            // Modals
+            function setupModal(openBtnIds, closeBtnId, modalId) {
+                const openBtns = openBtnIds.map(id => document.getElementById(id)).filter(Boolean);
+                const closeBtn = document.getElementById(closeBtnId);
+                const modal = document.getElementById(modalId);
+                if (openBtns.length === 0 || !closeBtn || !modal) return;
+                const openModal = () => {
+                    mobileMenu.classList.add('hidden');
+                    modal.classList.remove('hidden');
+                    setLanguage(currentLang.value);
+                };
+                const closeModal = () => modal.classList.add('hidden');
+                openBtns.forEach(btn => btn.addEventListener('click', openModal));
+                closeBtn.addEventListener('click', closeModal);
+                modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+            }
+            setupModal(['open-schedule-modal', 'open-schedule-modal-nav', 'open-schedule-modal-mobile'], 'close-schedule-modal', 'schedule-modal');
+            setupModal(['open-contact-modal-top', 'open-contact-modal-bottom'], 'close-contact-modal', 'contact-modal');
+            setupModal(['open-dan-modal'], 'close-dan-modal', 'dan-modal');
+            setupModal(['open-steven-modal'], 'close-steven-modal', 'steven-modal');
+            setupModal(['open-xiaoniu-modal'], 'close-xiaoniu-modal', 'xiaoniu-modal');
+            setupModal(['open-youth-modal'], 'close-youth-modal', 'youth-modal');
+            setupModal(['open-junior-modal'], 'close-junior-modal', 'junior-modal');
+
+            // Accordions
+            viewMoreBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const description = btn.parentElement.nextElementSibling;
+                    description.classList.toggle('hidden');
+                    setLanguage(currentLang.value); // Refresh text
+                });
+            });
+
+            // FAQ Accordion
+            faqItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const answer = item.nextElementSibling;
+                    const icon = item.querySelector('.faq-icon');
+                    answer.classList.toggle('open');
+                    icon.classList.toggle('rotate');
+                });
+            });
+
+            // Contact Form
+            contactForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                // Logic for form submission...
+            });
+
+            // Gallery
+            galleryImages.forEach((src, index) => {
+                const imgContainer = document.createElement('div');
+                imgContainer.className = 'cursor-pointer overflow-hidden rounded-lg shadow-md';
+                const img = document.createElement('img');
+                img.src = src;
+                img.alt = `Gallery image ${index + 1}`;
+                img.className = 'w-full h-full object-cover gallery-img';
+                img.dataset.index = index;
+                img.onerror = function() { this.onerror=null; this.src='https://placehold.co/400x400/e0e0e0/333333?text=Image+not+found'; };
+                imgContainer.appendChild(img);
+                galleryGrid.appendChild(imgContainer);
+            });
+            
+            function showImage(index) {
+                currentImageIndex = index;
+                lightboxImage.src = galleryImages[currentImageIndex];
+                galleryModal.classList.remove('hidden');
+            }
+            
+            galleryGrid.addEventListener('click', (e) => { 
+                if (e.target.tagName === 'IMG') {
+                    showImage(parseInt(e.target.dataset.index));
+                }
+            });
+
+            closeGalleryBtn.addEventListener('click', () => galleryModal.classList.add('hidden'));
+
+            prevBtn.addEventListener('click', () => {
+                currentImageIndex = (currentImageIndex > 0) ? currentImageIndex - 1 : galleryImages.length - 1;
+                lightboxImage.src = galleryImages[currentImageIndex];
+            });
+
+            nextBtn.addEventListener('click', () => {
+                currentImageIndex = (currentImageIndex < galleryImages.length - 1) ? currentImageIndex + 1 : 0;
+                lightboxImage.src = galleryImages[currentImageIndex];
+            });
+            
+            // Close gallery modal on overlay click
+            galleryModal.addEventListener('click', (e) => {
+                if (e.target === galleryModal) {
+                    galleryModal.classList.add('hidden');
+                }
+            });
+
+            // Pricing and Schedule filter buttons
+            document.querySelectorAll('.pricing-age-btn').forEach(btn => btn.addEventListener('click', handlePricingAgeChange));
+            document.querySelectorAll('.schedule-age-btn').forEach(btn => btn.addEventListener('click', handleScheduleAgeChange));
+
+            // --- Final Initialization ---
+            document.getElementById('current-year').textContent = new Date().getFullYear();
+            const userLang = navigator.language || navigator.userLanguage; 
+            currentLang.value = userLang.startsWith('zh') ? 'zh' : 'en';
+            initializeDynamicContent();
+        });
+    </script>
+
+</body>
+</html>

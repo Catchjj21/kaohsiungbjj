@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Account Verified</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Inter', sans-serif; }</style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+    <div class="text-center bg-white p-10 rounded-lg shadow-lg max-w-md mx-auto">
+        <h1 class="text-3xl font-black text-green-600 lang" data-lang-en="Success!" data-lang-zh="成功！">Success!</h1>
+        <p class="mt-4 text-gray-700 lang" data-lang-en="Your account has been successfully verified." data-lang-zh="您的帳戶已成功驗證。">Your account has been successfully verified.</p>
+        <a href="login.html" class="mt-6 inline-block bg-blue-600 text-white font-bold py-2 px-4 rounded hover:bg-blue-700 lang" data-lang-en="Log In Now" data-lang-zh="立即登入">Log In Now</a>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Function to switch language based on URL parameter
+            const setLanguage = () => {
+                const langElements = document.querySelectorAll('.lang');
+                const urlParams = new URLSearchParams(window.location.search);
+                // Default to English if 'lang' parameter is not 'zh'
+                const lang = urlParams.get('lang') === 'zh' ? 'zh' : 'en';
+
+                langElements.forEach(el => {
+                    const text = el.getAttribute(`data-lang-${lang}`);
+                    if (text) {
+                        el.textContent = text;
+                    }
+                });
+            };
+            setLanguage();
+        });
+    </script>
+</body>
+</html>

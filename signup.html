@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Catch Jiu Jitsu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <!-- Cropper.js CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .signup-bg {
+            background-color: #f3f4f6;
+            background-image:
+                radial-gradient(at 47% 33%, hsl(200.00, 0%, 100%) 0, transparent 59%),
+                radial-gradient(at 82% 65%, hsl(215.00, 70%, 85%) 0, transparent 55%);
+        }
+        .modal {
+            display: none; /* Changed to none to hide by default */
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 2.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        /* New styles for profile picture upload */
+        .profile-picture-container {
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        #profilePicturePreview {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #e5e7eb; /* Tailwind gray-200 */
+            background-color: #f9fafb; /* Tailwind gray-50 */
+            display: block;
+            margin: 0 auto 0.75rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        input[type="file"] {
+            display: none; /* Hide the actual file input */
+        }
+        .custom-file-upload {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 1rem;
+            border: 1px solid #d1d5db; /* Tailwind gray-300 */
+            border-radius: 0.375rem; /* Tailwind rounded-md */
+            cursor: pointer;
+            background-color: #f3f4f6; /* Tailwind gray-100 */
+            color: #4b5563; /* Tailwind gray-600 */
+            font-size: 0.875rem; /* Tailwind text-sm */
+            font-weight: 500; /* Tailwind font-medium */
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        .custom-file-upload:hover {
+            background-color: #e5e7eb; /* Tailwind gray-200 */
+            border-color: #9ca3af; /* Tailwind gray-400 */
+        }
+        .custom-file-upload svg {
+            margin-right: 0.5rem;
+        }
+        .message-box {
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-align: center;
+        }
+        .message-box.success {
+            background-color: #d1fae5; /* green-100 */
+            color: #065f46; /* green-800 */
+        }
+        .message-box.error {
+            background-color: #fee2e2; /* red-100 */
+            color: #991b1b; /* red-800 */
+        }
+        .message-box.info {
+            background-color: #e0f2fe; /* blue-100 */
+            color: #1e40af; /* blue-800 */
+        }
+
+        /* Cropper Modal Specific Styles */
+        #cropper-modal .modal-content {
+            max-width: 800px; /* Wider for cropping */
+        }
+        #image-to-crop {
+            display: block;
+            max-width: 100%;
+            height: auto; /* Ensure image scales */
+        }
+        .cropper-container {
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 signup-bg">
+
+    <nav class="bg-white/80 backdrop-blur-md shadow-sm fixed top-0 left-0 right-0 z-40">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center h-20">
+                <a href="index.html" class="flex items-center space-x-2">
+                    <img src="logo.png" alt="Catch Jiu Jitsu Logo" class="h-12 w-12 rounded-full" onerror="this.onerror=null;this.src='https://placehold.co/48x48/e0e0e0/333333?text=Logo';">
+                    <span class="font-bold text-xl text-gray-800">Catch Jiu Jitsu</span>
+                </a>
+                <div class="flex items-center space-x-4">
+                    <a href="index.html" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium lang" data-lang-en="Home" data-lang-zh="首頁">Home</a>
+                    <div id="lang-switcher" class="pl-4 flex items-center space-x-2 text-sm border-l border-gray-300">
+                        <button id="lang-en" class="font-bold text-blue-600">EN</button>
+                        <span class="text-gray-300">|</span>
+                        <button id="lang-zh" class="font-normal text-gray-500 hover:text-blue-600">中文</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="min-h-screen flex flex-col items-center justify-center pt-24 pb-12 px-4">
+        <div class="w-full max-w-md">
+            <div class="bg-white rounded-2xl shadow-2xl p-8 md:p-10">
+                <div class="text-center mb-8">
+                    <h1 class="text-3xl md:text-4xl font-black text-gray-800 tracking-tight">
+                        <span class="lang" data-lang-en="Create an Account" data-lang-zh="建立帳戶">Create an Account</span>
+                    </h1>
+                    <p class="mt-2 text-gray-500 lang" data-lang-en="Join our community today." data-lang-zh="立即加入我們的社群。">Join our community today.</p>
+                </div>
+
+                <form id="signup-form" class="space-y-6">
+                    <input type="hidden" name="lang" id="lang-input" value="en">
+
+                    <!-- Profile Picture Upload Section -->
+                    <div class="profile-picture-container">
+                        <img id="profilePicturePreview" src="https://placehold.co/120x120/e0e0e0/333333?text=Profile" alt="Profile Picture Preview">
+                        <label for="profilePictureInput" class="custom-file-upload">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            <span class="lang" data-lang-en="Upload Profile Picture" data-lang-zh="上傳個人資料圖片">Upload Profile Picture</span>
+                        </label>
+                        <!-- The 'name' attribute is not needed here as it's handled by JS -->
+                        <input type="file" id="profilePictureInput" accept="image/jpeg, image/png, image/gif">
+                        <p class="text-gray-400 text-xs mt-1 lang" data-lang-en="Optional. Max 2MB. JPG, PNG, GIF." data-lang-zh="可選。最大2MB。JPG、PNG、GIF。">Optional. Max 5MB. JPG, PNG, GIF.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="first_name" class="block mb-2 text-sm font-medium text-gray-900 lang" data-lang-en="First Name" data-lang-zh="名字">First Name</label>
+                            <input type="text" id="first_name" name="first_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3" required>
+                        </div>
+                        <div>
+                            <label for="last_name" class="block mb-2 text-sm font-medium text-gray-900 lang" data-lang-en="Last Name" data-lang-zh="姓氏">Last Name</label>
+                            <input type="text" id="last_name" name="last_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3" required>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="dob" class="block mb-2 text-sm font-medium text-gray-900 lang" data-lang-en="Date of Birth" data-lang-zh="出生日期">Date of Birth</label>
+                            <input type="date" id="dob" name="dob" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3" required>
+                        </div>
+                        <div>
+                           <label for="member_type" class="block mb-2 text-sm font-medium text-gray-900 lang" data-lang-en="Membership Type" data-lang-zh="會員類型">Membership Type</label>
+                           <select id="member_type" name="member_type" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3" required>
+                               <option value="" disabled selected class="lang" data-lang-en="Select type" data-lang-zh="選擇類型">Select type</option>
+                               <option value="kids" class="lang" data-lang-en="Kids Program" data-lang-zh="兒童課程">Kids Program</option>
+                               <option value="adults" class="lang" data-lang-en="Adults Program" data-lang-zh="成人課程">Adults Program</option>
+                           </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="email" class="block mb-2 text-sm font-medium text-gray-900 lang" data-lang-en="Email" data-lang-zh="電子郵件">Email</label>
+                        <input type="email" id="email" name="email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3" required>
+                    </div>
+                    <div>
+                        <label for="password" class="block mb-2 text-sm font-medium text-gray-900 lang" data-lang-en="Password" data-lang-zh="密碼">Password</label>
+                        <input type="password" id="password" name="password" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3" required>
+                    </div>
+                     <div>
+                        <label for="confirm-password" class="block mb-2 text-sm font-medium text-gray-900 lang" data-lang-en="Confirm Password" data-lang-zh="確認密碼">Confirm Password</label>
+                        <input type="password" id="confirm-password" name="confirm-password" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3" required>
+                    </div>
+
+                    <hr class="border-gray-200">
+
+                    <h2 class="text-xl font-bold text-gray-800 tracking-tight lang" data-lang-en="Additional Information" data-lang-zh="其他資訊">Additional Information</h2>
+
+                    <div>
+                        <label for="line_id" class="block mb-2 text-sm font-medium text-gray-900 lang" data-lang-en="Line ID" data-lang-zh="Line ID">Line ID</label>
+                        <input type="text" id="line_id" name="line_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3">
+                    </div>
+
+                    <div>
+                        <label for="address" class="block mb-2 text-sm font-medium text-gray-900 lang" data-lang-en="Address" data-lang-zh="地址">Address</label>
+                        <input type="text" id="address" name="address" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3">
+                    </div>
+
+                    <div>
+                        <label for="chinese_name" class="block mb-2 text-sm font-medium text-gray-900 lang" data-lang-en="Chinese Name (中文姓名)" data-lang-zh="中文姓名">Chinese Name (中文姓名)</label>
+                        <input type="text" id="chinese_name" name="chinese_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3">
+                    </div>
+
+                    <hr class="border-gray-200">
+
+                    <h2 class="text-xl font-bold text-gray-800 tracking-tight lang" data-lang-en="Waiver Acceptance" data-lang-zh="免責聲明接受">Waiver Acceptance</h2>
+
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            <input id="waiver_acceptance" name="waiver_acceptance" type="checkbox" class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded" required>
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="waiver_acceptance" class="font-medium text-gray-900 lang" data-lang-en="I accept the" data-lang-zh="我接受">I accept the</label>
+                            <button type="button" id="view-disclaimer-btn" class="font-medium text-blue-600 hover:underline ml-1 lang" data-lang-en="View Disclaimer" data-lang-zh="查看免責聲明">View Disclaimer</button>
+                            <span class="font-medium text-gray-900 lang" data-lang-en="for participation." data-lang-zh="參與免責聲明。">for participation.</span>
+                            <p class="text-red-500 text-xs mt-1" id="waiver-error" style="display:none;" data-lang-en="You must accept the waiver to sign up." data-lang-zh="您必須接受免責聲明才能註冊。">You must accept the waiver to sign up.</p>
+                        </div>
+                    </div>
+
+                    <div class="g-recaptcha" data-sitekey="6LeKvJErAAAAAK4dvymFpmvRGkuUl9px_fpVLhch"></div>
+
+                    <div>
+                        <button type="submit" id="signup-button" class="w-full text-white bg-purple-600 hover:bg-purple-700 font-bold rounded-lg text-base px-5 py-3 text-center transition shadow-lg lang" data-lang-en="Create Account" data-lang-zh="建立帳戶">Create Account</button>
+                    </div>
+                </form>
+
+                <div id="response-message" class="message-box hidden"></div>
+
+                <div class="mt-8 text-center">
+                    <p class="text-sm text-gray-600">
+                        <span class="lang" data-lang-en="Already have an account?" data-lang-zh="已經有帳戶了？">Already have an account?</span>
+                        <a href="login.html" class="font-medium text-blue-600 hover:underline lang" data-lang-en="Log In" data-lang-zh="登入">Log In</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="disclaimer-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="close-modal-btn">&times;</span>
+            <h2 class="text-2xl font-bold mb-4 lang" data-lang-en="Participation Waiver and Release of Liability" data-lang-zh="參與免責聲明和責任解除書">Participation Waiver and Release of Liability</h2>
+            <div class="text-gray-700 text-sm leading-relaxed space-y-3">
+                <p class="lang" data-lang-en="By checking the waiver acceptance box, you acknowledge and agree to the following terms and conditions related to your participation in activities at Catch Jiu Jitsu:" data-lang-zh="勾選免責聲明接受框，即表示您確認並同意以下與您參與Catch Jiu Jitsu活動相關的條款和條件：">By checking the waiver acceptance box, you acknowledge and agree to the following terms and conditions related to your participation in activities at Catch Jiu Jitsu:</p>
+
+                <p class="font-semibold lang" data-lang-en="Assumption of Risk:" data-lang-zh="風險承擔：">Assumption of Risk:</p>
+                <p class="lang" data-lang-en="You understand that participating in martial arts, including Jiu Jitsu, involves inherent risks of physical injury, including but not limited to sprains, fractures, concussions, and other serious injuries. You voluntarily assume all risks associated with your participation in any and all activities, training sessions, and events offered by Catch Jiu Jitsu." data-lang-zh="您了解參與武術，包括巴西柔術，涉及固有的身體傷害風險，包括但不限於扭傷、骨折、腦震盪和其他嚴重傷害。您自願承擔參與Catch Jiu Jitsu提供的任何及所有活動、訓練課程和事件相關的所有風險。">You understand that participating in martial arts, including Jiu Jitsu, involves inherent risks of physical injury, including but not limited to sprains, fractures, concussions, and other serious injuries. You voluntarily assume all risks associated with your participation in any and all activities, training sessions, and events offered by Catch Jiu Jitsu.</p>
+
+                <p class="font-semibold lang" data-lang-en="Medical Condition:" data-lang-zh="健康狀況：">Medical Condition:</p>
+                <p class="lang" data-lang-en="You affirm that you are in good physical condition and do not suffer from any disability, illness, or condition that would prevent or limit your participation in the activities. You agree to consult with a medical professional if you have any doubts about your ability to participate safely." data-lang-zh="您確認您身體狀況良好，沒有任何會阻止或限制您參與活動的殘疾、疾病或狀況。如果您對自己能否安全參與有任何疑問，您同意諮詢醫療專業人員。">You affirm that you are in good physical condition and do not suffer from any disability, illness, or condition that would prevent or limit your participation in the activities. You agree to consult with a medical professional if you have any doubts about your ability to participate safely.</p>
+
+                <p class="font-semibold lang" data-lang-en="Release and Waiver of Liability:" data-lang-zh="責任解除和豁免：">Release and Waiver of Liability:</p>
+                <p class="lang" data-lang-en="In consideration of being permitted to participate, you, for yourself, your heirs, executors, administrators, and assigns, hereby release, waive, discharge, and covenant not to sue Catch Jiu Jitsu, its instructors, employees, agents, and affiliates from any and all liability, claims, demands, actions, or causes of action whatsoever arising out of or related to any loss, damage, or injury, including death, that may be sustained by you, or to any property belonging to you, whether caused by the negligence of Catch Jiu Jitsu or otherwise, while participating in any activity, or while in, on, or upon the premises where the activities are being conducted." data-lang-zh="考慮到被允許參與，您本人、您的繼承人、執行人、管理人和受讓人在此解除、放棄、免除並承諾不對Catch Jiu Jitsu、其教練、員工、代理人和附屬機構提起任何及所有因您可能遭受的任何損失、損害或傷害（包括死亡），或屬於您的任何財產，無論是由於Catch Jiu Jitsu的疏忽或其他原因造成，在參與任何活動，或在活動進行的場所內、上或處所內而產生或與之相關的責任、索賠、要求、訴訟或訴訟原因。">In consideration of being permitted to participate, you, for yourself, your heirs, executors, administrators, and assigns, hereby release, waive, discharge, and covenant not to sue Catch Jiu Jitsu, its instructors, employees, agents, and affiliates from any and all liability, claims, demands, actions, or causes of action whatsoever arising out of or related to any loss, damage, or injury, including death, that may be sustained by you, or to any property belonging to you, whether caused by the negligence of Catch Jiu Jitsu or otherwise, while participating in any activity, or while in, on, or upon the premises where the activities are being conducted.</p>
+
+                <p class="font-semibold lang" data-lang-en="Indemnification:" data-lang-zh="賠償：">Indemnification:</p>
+                <p class="lang" data-lang-en="You agree to indemnify and hold harmless Catch Jiu Jitsu, its instructors, employees, agents, and affiliates from any loss, liability, damage, or cost that may incur due to your participation in the activities, whether caused by negligence or otherwise." data-lang-zh="您同意賠償並使Catch Jiu Jitsu、其教練、員工、代理人和附屬機構免受因您參與活動而可能產生的任何損失、責任、損害或費用，無論是由於疏忽或其他原因造成。">You agree to indemnify and hold harmless Catch Jiu Jitsu, its instructors, employees, agents, and affiliates from any loss, liability, damage, or cost that may incur due to your participation in the activities, whether caused by negligence or otherwise.</p>
+
+                <p class="font-semibold lang" data-lang-en="Governing Law:" data-lang-zh="管轄法律：">Governing Law:</p>
+                <p class="lang" data-lang-en="This waiver shall be governed by and construed in accordance with the laws of Taiwan, without regard to its conflict of law principles. Any legal action or proceeding arising out of or relating to this waiver shall be brought exclusively in the courts located in Kaohsiung City, Taiwan." data-lang-zh="本免責聲明應受台灣法律管轄並依其解釋，不考慮其法律衝突原則。任何因本免責聲明引起或與之相關的法律訴訟或程序應專門在台灣高雄市的法院提起。">This waiver shall be governed by and construed in accordance with the laws of Taiwan, without regard to its conflict of law principles. Any legal action or proceeding arising out of or relating to this waiver shall be brought exclusively in the courts located in Kaohsiung City, Taiwan.</p>
+
+                <p class="font-semibold lang" data-lang-en="Emergency Medical Treatment:" data-lang-zh="緊急醫療處理：">Emergency Medical Treatment:</p>
+                <p class="lang" data-lang-en="In the event of an emergency, you authorize Catch Jiu Jitsu, its instructors, or agents to seek and consent to medical treatment for you as they deem necessary. You agree to be responsible for any medical expenses incurred." data-lang-zh="如遇緊急情況，您授權Catch Jiu Jitsu、其教練或代理人為您尋求並同意他們認為必要的醫療處理。您同意承擔所產生的一切醫療費用。">In the event of an emergency, you authorize Catch Jiu Jitsu, its instructors, or agents to seek and consent to medical treatment for you as they deem necessary. You agree to be responsible for any medical expenses incurred.</p>
+
+                <p class="font-semibold lang" data-lang-en="Severability:" data-lang-zh="可分割性：">Severability:</p>
+                <p class="lang" data-lang-en="If any provision of this waiver is found to be unenforceable, the remaining provisions shall remain in full force and effect." data-lang-zh="如果本免責聲明的任何條款被認定為不可執行，其餘條款仍將完全有效。">If any provision of this waiver is found to be unenforceable, the remaining provisions shall remain in full force and effect.</p>
+
+                <p class="lang" data-lang-en="By proceeding with registration, you acknowledge that you have read this waiver and release of liability, understand its contents, and voluntarily agree to its terms." data-lang-zh="通過繼續註冊，您確認已閱讀本免責聲明和責任解除書，理解其內容，並自願同意其條款。">By proceeding with registration, you acknowledge that you have read this waiver and release of liability, understand its contents, and voluntarily agree to its terms.</p>
+            </div>
+            <div class="mt-6 text-right">
+                <button type="button" id="agree-modal-btn" class="text-white bg-blue-600 hover:bg-blue-700 font-bold rounded-lg text-base px-5 py-2.5 text-center transition shadow-lg lang" data-lang-en="Close" data-lang-zh="關閉">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cropper Modal -->
+    <div id="cropper-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="close-cropper-modal-btn">&times;</span>
+            <h2 class="text-2xl font-bold mb-4 lang" data-lang-en="Crop Profile Picture" data-lang-zh="裁剪個人資料圖片">Crop Profile Picture</h2>
+            <div class="cropper-container">
+                <img id="image-to-crop" src="" alt="Image to Crop">
+            </div>
+            <div class="flex justify-end space-x-4 mt-6">
+                <button type="button" id="cancel-crop-btn" class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition lang" data-lang-en="Cancel" data-lang-zh="取消">Cancel</button>
+                <button type="button" id="crop-image-btn" class="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition lang" data-lang-en="Crop & Select" data-lang-zh="裁剪並選擇">Crop & Select</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cropper.js JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const langElements = document.querySelectorAll('.lang');
+            const langEnBtn = document.getElementById('lang-en');
+            const langZhBtn = document.getElementById('lang-zh');
+            const langInput = document.getElementById('lang-input');
+            const signupForm = document.getElementById('signup-form');
+            const waiverCheckbox = document.getElementById('waiver_acceptance');
+            const waiverError = document.getElementById('waiver-error');
+            const disclaimerModal = document.getElementById('disclaimer-modal');
+            const viewDisclaimerBtn = document.getElementById('view-disclaimer-btn');
+            const closeModalBtn = document.getElementById('close-modal-btn');
+            const agreeModalBtn = document.getElementById('agree-modal-btn');
+            const responseMessageDiv = document.getElementById('response-message'); // New: Message display area
+
+            // Profile picture elements
+            const profilePictureInput = document.getElementById('profilePictureInput');
+            const profilePicturePreview = document.getElementById('profilePicturePreview');
+
+            // Cropper elements
+            const cropperModal = document.getElementById('cropper-modal');
+            const imageToCrop = document.getElementById('image-to-crop');
+            const closeCropperModalBtn = document.getElementById('close-cropper-modal-btn');
+            const cancelCropBtn = document.getElementById('cancel-crop-btn');
+            const cropImageBtn = document.getElementById('crop-image-btn');
+            let cropper; // Variable to hold the Cropper instance
+            let croppedImageBlob = null; // To store the final cropped image blob
+
+            // Function to display messages
+            function showMessage(message, type = 'info') {
+                responseMessageDiv.textContent = message;
+                responseMessageDiv.className = `message-box ${type}`;
+                responseMessageDiv.classList.remove('hidden');
+                // Scroll to message for visibility on smaller screens
+                responseMessageDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            // --- Language Switcher Logic ---
+            const setLanguage = (lang) => {
+                langElements.forEach(el => {
+                    const text = el.getAttribute(`data-lang-${lang}`);
+                    if (text) {
+                        el.textContent = text;
+                    }
+                });
+
+                if (lang === 'zh') {
+                    langZhBtn.className = 'font-bold text-blue-600';
+                    langEnBtn.className = 'font-normal text-gray-500 hover:text-blue-600';
+                } else {
+                    langEnBtn.className = 'font-bold text-blue-600';
+                    langZhBtn.className = 'font-normal text-gray-500 hover:text-blue-600';
+                }
+                
+                langInput.value = lang;
+            };
+
+            langEnBtn.addEventListener('click', () => setLanguage('en'));
+            langZhBtn.addEventListener('click', () => setLanguage('zh'));
+
+            const userLang = navigator.language || navigator.userLanguage;
+            const defaultLang = userLang.startsWith('zh') ? 'zh' : 'en';
+            setLanguage(defaultLang);
+
+            // --- Disclaimer Modal Logic ---
+            viewDisclaimerBtn.addEventListener('click', () => {
+                disclaimerModal.style.display = 'flex';
+            });
+
+            closeModalBtn.addEventListener('click', () => {
+                disclaimerModal.style.display = 'none';
+            });
+
+            agreeModalBtn.addEventListener('click', () => {
+                disclaimerModal.style.display = 'none';
+            });
+
+            window.addEventListener('click', (event) => {
+                if (event.target == disclaimerModal) {
+                    disclaimerModal.style.display = 'none';
+                }
+            });
+
+            // --- Waiver Acceptance Validation ---
+            waiverCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    waiverError.style.display = 'none';
+                }
+            });
+
+            // --- Profile Picture Cropping Logic ---
+            profilePictureInput.addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    // Basic file size validation (e.g., max 2MB)
+                    if (file.size > 2 * 1024 * 1024) {
+                        showMessage('File size exceeds 2MB limit.', 'error');
+                        profilePictureInput.value = ''; // Clear the input
+                        profilePicturePreview.src = "https://placehold.co/120x120/e0e0e0/333333?text=Profile";
+                        croppedImageBlob = null; // Clear any previous cropped image
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        imageToCrop.src = e.target.result; // Set image source for cropper
+                        cropperModal.style.display = 'flex'; // Show the cropper modal
+
+                        // Destroy previous cropper instance if it exists
+                        if (cropper) {
+                            cropper.destroy();
+                        }
+
+                        // Initialize Cropper.js
+                        cropper = new Cropper(imageToCrop, {
+                            aspectRatio: 1, // Force a square crop for profile pictures
+                            viewMode: 1, // Restrict the crop box to not exceed the canvas
+                            autoCropArea: 0.8, // Initial crop area (80% of image)
+                            background: false, // Hide the grid background
+                            zoomable: true,
+                            scalable: true,
+                            ready() {
+                                // You can add actions here once cropper is ready
+                            }
+                        });
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    profilePicturePreview.src = "https://placehold.co/120x120/e0e0e0/333333?text=Profile"; // Reset to placeholder
+                    croppedImageBlob = null;
+                }
+            });
+
+            // Handle "Crop & Select" button click
+            cropImageBtn.addEventListener('click', () => {
+                if (cropper) {
+                    // Get cropped canvas data as a Blob
+                    cropper.getCroppedCanvas({
+                        width: 256, // Desired width for the output image
+                        height: 256, // Desired height for the output image
+                        fillColor: '#fff' // Fill transparent areas with white
+                    }).toBlob((blob) => {
+                        croppedImageBlob = blob; // Store the blob for later upload
+                        profilePicturePreview.src = URL.createObjectURL(blob); // Display cropped image in preview
+                        cropperModal.style.display = 'none'; // Hide cropper modal
+                        cropper.destroy(); // Destroy cropper instance
+                    }, 'image/jpeg', 0.9); // Output as JPEG with 90% quality
+                }
+            });
+
+            // Handle "Cancel" button click in cropper modal
+            cancelCropBtn.addEventListener('click', () => {
+                cropperModal.style.display = 'none';
+                if (cropper) {
+                    cropper.destroy();
+                }
+                profilePictureInput.value = ''; // Clear the file input
+                profilePicturePreview.src = "https://placehold.co/120x120/e0e0e0/333333?text=Profile"; // Reset preview
+                croppedImageBlob = null; // Clear cropped image
+            });
+
+            // Handle closing cropper modal via X button
+            closeCropperModalBtn.addEventListener('click', () => {
+                cropperModal.style.display = 'none';
+                if (cropper) {
+                    cropper.destroy();
+                }
+                profilePictureInput.value = ''; // Clear the file input
+                profilePicturePreview.src = "https://placehold.co/120x120/e0e0e0/333333?text=Profile"; // Reset preview
+                croppedImageBlob = null; // Clear cropped image
+            });
+
+            // --- Main Signup Form Submission Logic ---
+            signupForm.addEventListener('submit', async function(event) {
+                event.preventDefault(); // Prevent default form submission
+
+                // Validate waiver acceptance first
+                if (!waiverCheckbox.checked) {
+                    waiverError.style.display = 'block';
+                    waiverCheckbox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    showMessage(waiverError.getAttribute(`data-lang-${langInput.value}`), 'error');
+                    return; // Stop submission
+                } else {
+                    waiverError.style.display = 'none';
+                }
+
+                showMessage(langInput.value === 'zh' ? '正在註冊您的帳戶...' : 'Registering your account...', 'info');
+                document.getElementById('signup-button').disabled = true; // Disable button
+
+                const formData = new FormData(signupForm); // Get all form data including hidden fields
+                // The profilePictureInput's file is not directly appended to this form data
+                // as it's handled by the cropping logic.
+
+                try {
+                    // Step 1: Register the user
+                    const registerResponse = await fetch('signup_handler.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    // Attempt to parse JSON, but also get raw text for debugging if parsing fails
+                    let registerResult;
+                    const registerResponseText = await registerResponse.text(); // Get raw text
+                    try {
+                        registerResult = JSON.parse(registerResponseText); // Try parsing as JSON
+                    } catch (jsonError) {
+                        console.error('JSON parsing error for signup_handler.php:', jsonError);
+                        console.error('Raw response from signup_handler.php:', registerResponseText);
+                        showMessage(
+                            (langInput.value === 'zh' ? '註冊響應格式無效。請檢查伺服器日誌。' : 'Invalid response format from registration. Please check server logs.'),
+                            'error'
+                        );
+                        grecaptcha.reset();
+                        return; // Stop execution
+                    }
+
+                    if (registerResult.success) {
+                        const newUserId = registerResult.user_id; // Get the user_id from the response
+
+                        // Step 2: Upload profile picture (if cropped image exists)
+                        if (croppedImageBlob && newUserId) {
+                            showMessage(langInput.value === 'zh' ? '帳戶已註冊，正在上傳個人資料圖片...' : 'Account registered, uploading profile picture...', 'info');
+                            const imageData = new FormData();
+                            imageData.append('user_id', newUserId);
+                            imageData.append('cropped_image', croppedImageBlob, 'profile.jpg'); // Append the cropped Blob with a filename
+
+                            const uploadResponse = await fetch('upload_profile_picture.php', { // Your provided PHP file for upload
+                                method: 'POST',
+                                body: imageData
+                            });
+
+                            let uploadResult;
+                            const uploadResponseText = await uploadResponse.text(); // Get raw text
+                            try {
+                                uploadResult = JSON.parse(uploadResponseText); // Try parsing as JSON
+                            } catch (jsonError) {
+                                console.error('JSON parsing error for upload_profile_picture.php:', jsonError);
+                                console.error('Raw response from upload_profile_picture.php:', uploadResponseText);
+                                showMessage(
+                                    (langInput.value === 'zh' ? '圖片上傳響應格式無效。請檢查伺服器日誌。' : 'Invalid response format from image upload. Please check server logs.'),
+                                    'error'
+                                );
+                                grecaptcha.reset();
+                                return; // Stop execution
+                            }
+
+                            if (uploadResult.success) {
+                                showMessage(
+                                    (langInput.value === 'zh' ? '註冊成功！個人資料圖片已上傳。' : 'Sign up successful! Profile picture uploaded.'),
+                                    'success'
+                                );
+                                // Optional: Redirect or clear form after successful signup and upload
+                                setTimeout(() => {
+                                    window.location.href = 'signup_pending.html?lang=' + langInput.value;
+                                }, 2000);
+                            } else {
+                                showMessage(
+                                    (langInput.value === 'zh' ? '註冊成功，但上傳個人資料圖片失敗：' : 'Sign up successful, but failed to upload profile picture: ') + uploadResult.message,
+                                    'error'
+                                );
+                                // Still redirect to signup_pending as the account is created
+                                setTimeout(() => {
+                                    window.location.href = 'signup_pending.html?lang=' + langInput.value;
+                                }, 2000);
+                            }
+                        } else {
+                            // No profile picture selected or cropped, proceed directly to signup_pending
+                            showMessage(
+                                (langInput.value === 'zh' ? '註冊成功！請檢查您的電子郵件以進行驗證。' : 'Sign up successful! Please check your email for verification.'),
+                                'success'
+                            );
+                            setTimeout(() => {
+                                window.location.href = 'signup_pending.html?lang=' + langInput.value;
+                            }, 2000);
+                        }
+
+                    } else {
+                        // Registration failed
+                        showMessage(
+                            (langInput.value === 'zh' ? '註冊失敗：' : 'Sign up failed: ') + registerResult.message,
+                            'error'
+                        );
+                        grecaptcha.reset(); // Reset reCAPTCHA on failure
+                    }
+
+                } catch (error) {
+                    console.error('Error during signup or upload:', error);
+                    showMessage(
+                        (langInput.value === 'zh' ? '發生意外錯誤。請再試一次。' : 'An unexpected error occurred. Please try again.'),
+                        'error'
+                    );
+                    grecaptcha.reset(); // Reset reCAPTCHA on error
+                } finally {
+                    document.getElementById('signup-button').disabled = false; // Re-enable button
+                }
+            });
+        });
+    </script>
+    
+</body>
+</html>

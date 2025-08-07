@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Catch Jiu Jitsu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="/favicon.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .login-bg {
+            background-color: #f3f4f6;
+            background-image:
+                radial-gradient(at 47% 33%, hsl(200.00, 0%, 100%) 0, transparent 59%),
+                radial-gradient(at 82% 65%, hsl(215.00, 70%, 85%) 0, transparent 55%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 login-bg">
+
+    <!-- Header -->
+    <nav class="bg-white/80 backdrop-blur-md shadow-sm fixed top-0 left-0 right-0 z-40">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center h-20">
+                <a href="index.html" class="flex items-center space-x-2">
+                    <img src="logo.png" alt="Catch Jiu Jitsu Logo" class="h-12 w-12" onerror="this.onerror=null;this.src='https://placehold.co/48x48/e0e0e0/333333?text=Logo';">
+                    <span class="font-bold text-xl text-gray-800">Catch Jiu Jitsu</span>
+                </a>
+                <div class="flex items-center space-x-4">
+                    <a href="index.html" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium lang" data-lang-en="Back to Home" data-lang-zh="返回首頁">Back to Home</a>
+                    <div id="lang-switcher-desktop" class="pl-4 flex items-center space-x-2 text-sm border-l border-gray-300">
+                        <button id="lang-en-desktop" class="font-bold text-blue-600">EN</button>
+                        <span class="text-gray-300">|</span>
+                        <button id="lang-zh-desktop" class="font-normal text-gray-500 hover:text-blue-600">中文</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Login Form Section -->
+    <div class="min-h-screen flex flex-col items-center justify-center pt-24 pb-12 px-4">
+        <div class="w-full max-w-md">
+            <div class="bg-white rounded-2xl shadow-2xl p-8 md:p-10">
+                <div class="text-center mb-8">
+                    <h1 class="text-3xl md:text-4xl font-black text-gray-800 tracking-tight lang" data-lang-en="Member Login" data-lang-zh="會員登入">Member Login</h1>
+                    <p class="mt-2 text-gray-500 lang" data-lang-en="Access your member portal." data-lang-zh="進入您的會員入口網站。">Access your member portal.</p>
+                </div>
+
+                <!-- Display Login Errors Here -->
+                <div id="error-message" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-6" role="alert">
+                    <span class="block sm:inline"></span>
+                </div>
+
+                <!-- Form now submits to the PHP handler -->
+                <form id="login-form" action="login_handler.php" method="POST" class="space-y-6">
+                    <div>
+                        <label for="email" class="block mb-2 text-sm font-medium text-gray-900 lang" data-lang-en="Email" data-lang-zh="電子郵件">Email</label>
+                        <input type="email" id="email" name="email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3" required>
+                    </div>
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <label for="password" class="block mb-2 text-sm font-medium text-gray-900 lang" data-lang-en="Password" data-lang-zh="密碼">Password</label>
+                            <!-- Updated Forgot Password Link -->
+                            <a href="forgot_password.php" class="text-sm text-blue-600 hover:underline lang" data-lang-en="Forgot Password?" data-lang-zh="忘記密碼？">Forgot Password?</a>
+                        </div>
+                        <input type="password" id="password" name="password" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3" required>
+                    </div>
+                    <div>
+                        <button type="submit" class="w-full text-white bg-purple-600 hover:bg-purple-700 font-bold rounded-lg text-base px-5 py-3 text-center transition shadow-lg lang" data-lang-en="Log In" data-lang-zh="登入">Log In</button>
+                    </div>
+                </form>
+
+                <div class="mt-8 text-center">
+                    <p class="text-sm text-gray-600">
+                        <span class="lang" data-lang-en="Don't have an account?" data-lang-zh="還沒有帳號？">Don't have an account?</span>
+                        <a href="signup.html" class="font-medium text-blue-600 hover:underline lang" data-lang-en="Sign Up" data-lang-zh="註冊">Sign Up</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Language Switching Logic (remains the same)
+        const langElements = document.querySelectorAll('.lang');
+        let currentLang = 'en';
+        const langEnDesktop = document.getElementById('lang-en-desktop');
+        const langZhDesktop = document.getElementById('lang-zh-desktop');
+        function updateSwitcherStyles(lang) {
+            if (lang === 'en') {
+                langEnDesktop.className = 'font-bold text-blue-600';
+                langZhDesktop.className = 'font-normal text-gray-500 hover:text-blue-600';
+            } else {
+                langEnDesktop.className = 'font-normal text-gray-500 hover:text-blue-600';
+                langZhDesktop.className = 'font-bold text-blue-600';
+            }
+        }
+        function setLanguage(lang) {
+            currentLang = lang;
+            langElements.forEach(el => {
+                const text = el.getAttribute(`data-lang-${lang}`);
+                if (text) { el.innerHTML = text; }
+            });
+            updateSwitcherStyles(lang);
+        }
+        langEnDesktop.addEventListener('click', () => setLanguage('en'));
+        langZhDesktop.addEventListener('click', () => setLanguage('zh'));
+        const userLang = navigator.language || navigator.userLanguage;
+        const defaultLang = userLang.startsWith('zh') ? 'zh' : 'en';
+        setLanguage(defaultLang);
+
+        // Check for login errors in the URL and display them
+        const urlParams = new URLSearchParams(window.location.search);
+        const error = urlParams.get('error');
+        if (error) {
+            const errorMessageDiv = document.getElementById('error-message');
+            errorMessageDiv.querySelector('span').textContent = decodeURIComponent(error);
+            errorMessageDiv.classList.remove('hidden');
+        }
+    });
+    </script>
+
+</body>
+</html>
