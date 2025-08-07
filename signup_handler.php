@@ -129,7 +129,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                 // --- Send Notification Email to Admin ---
                 try {
                     $admin_mail = new PHPMailer(true);
-                    $admin_completion_link = "https://kaohsiungbjj.com/admin/admin_complete_registration.php?user_id=" . $new_user_id;
+                    $admin_completion_link = "admin/admin_complete_registration.php?user_id=" . $new_user_id;
 
                     // Server settings
                     $admin_mail->isSMTP();
@@ -177,7 +177,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                 // --- Send Professional HTML Verification Email to User ---
                 $mail = new PHPMailer(true);
                 $full_name = $first_name . " " . $last_name;
-                $verification_link = "https://kaohsiungbjj.com/verify.php?email=" . urlencode($email) . "&token=" . urlencode($verification_token);
+                $verification_link = "verify.php?email=" . urlencode($email) . "&token=" . urlencode($verification_token);
 
                 try {
                     // Server settings
