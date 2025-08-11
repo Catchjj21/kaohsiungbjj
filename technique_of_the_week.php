@@ -106,7 +106,7 @@ function get_youtube_embed_url($url) {
 
 // Determine the correct dashboard link based on user role
 $dashboard_link = "dashboard.php";
-if (isset($_SESSION['role'])) {
+if (isset($_SESSION['role']) && !empty($_SESSION['role'])) {
     switch ($_SESSION['role']) {
         case 'coach':
             $dashboard_link = "coach/coach_dashboard.php";
@@ -116,6 +116,10 @@ if (isset($_SESSION['role'])) {
             break;
         case 'admin':
             $dashboard_link = "admin/admin_dashboard.php";
+            break;
+        case 'member':
+        default:
+            $dashboard_link = "dashboard.php";
             break;
     }
 }
@@ -163,6 +167,9 @@ if (isset($_SESSION['role'])) {
                     <button id="lang-zh" class="font-normal text-gray-500 hover:text-blue-600">中文</button>
                 </div>
                 <a href="<?php echo $dashboard_link; ?>" class="bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700 transition lang" data-lang-en="Back to Dashboard" data-lang-zh="返回儀表板">Back to Dashboard</a>
+                <?php if ($_SESSION['role'] === 'admin'): ?>
+                    <a href="dashboard.php" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition ml-2">Member Dashboard</a>
+                <?php endif; ?>
             </div>
         </div>
     </nav>

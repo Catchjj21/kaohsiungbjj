@@ -1,16 +1,15 @@
 <?php
-// THE FIX: Include the database config FIRST.
-// This loads the session cookie settings from db_config.php BEFORE the session is started.
+// Include the database config
 require_once "../db_config.php";
 
-// Now that the settings are loaded, start the session.
+// Start the session
 session_start();
 
-// Check for login
-if(!isset($_SESSION["admin_loggedin"]) || $_SESSION["admin_loggedin"] !== true || ($_SESSION["role"] !== 'admin' && $_SESSION["role"] !== 'coach')){
-    header("location: admin_login.html");
-    exit;
-}
+// Include the admin authentication helper
+require_once "admin_auth.php";
+
+// Check if the user has admin access
+requireAdminAccess(['admin', 'coach']);
 
 // Get current filters and search term
 $filter = $_GET['filter'] ?? 'all';
@@ -35,9 +34,9 @@ if ($filter === 'active') {
 } elseif ($filter === 'expired') {
     $where_clauses[] = "(m.end_date < CURDATE() OR m.id IS NULL)";
 } elseif ($filter === 'adult') {
-    $where_clauses[] = "u.member_type = 'Adult'";
+    $where_clauses[] = "u.member_type = 'adult'";
 } elseif ($filter === 'kid') {
-    $where_clauses[] = "u.member_type = 'Kid'";
+    $where_clauses[] = "u.member_type = 'child'";
 } elseif ($filter === 'member') { // Explicit filter for members
     $where_clauses[] = "u.role = 'member'";
 } elseif ($filter === 'staff') { // New: Filter for coaches and admins
@@ -86,7 +85,7 @@ if($stmt = mysqli_prepare($link, $sql)){
 mysqli_close($link);
 
 // Options for dropdowns in editable cells
-$member_type_options = ['Adult', 'Kid'];
+$member_type_options = ['adult', 'child'];
 $role_options = ['member', 'coach', 'admin']; // Options for user roles
 $membership_type_options = [
     'None',
@@ -146,6 +145,49 @@ $language_options = ['en', 'zh'];
             <a href="../logout.php" class="bg-purple-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-purple-700 transition">Logout</a>
         </div>
     </nav>
+    
+    <!-- Error/Success Messages -->
+    <?php if (isset($_GET['error'])): ?>
+        <div class="container mx-auto px-6 py-4">
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                <strong class="font-bold">Error!</strong>
+                <span class="block sm:inline">
+                    <?php 
+                    $error = $_GET['error'];
+                    switch($error) {
+                        case 'user_update_failed':
+                            echo 'Failed to update user information.';
+                            break;
+                        case 'membership_update_failed':
+                            echo 'Failed to update membership information.';
+                            break;
+                        case 'membership_insert_failed':
+                            echo 'Failed to insert membership information.';
+                            break;
+                        case 'membership_delete_failed':
+                            echo 'Failed to delete membership information.';
+                            break;
+                        case 'image_data_invalid':
+                            echo 'Invalid image data provided.';
+                            break;
+                        case 'image_decode_failed':
+                            echo 'Failed to process image data.';
+                            break;
+                        case 'image_save_failed':
+                            echo 'Failed to save profile picture.';
+                            break;
+                        case 'missing_required_fields':
+                            echo 'Missing required fields in the form.';
+                            break;
+                        default:
+                            echo 'An error occurred while processing your request.';
+                    }
+                    ?>
+                </span>
+            </div>
+        </div>
+    <?php endif; ?>
+    
     <div class="container mx-auto px-6 py-12">
         <div class="flex justify-between items-center mb-6">
             <div>

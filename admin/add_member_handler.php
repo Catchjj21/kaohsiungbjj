@@ -57,13 +57,22 @@ try {
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
     $profile_picture_url = "https://placehold.co/100x100/e2e8f0/333333?text=Pic"; // Default placeholder image
 
+    // Get the next available old_card number for members
+    $next_card_number = 1;
+    if ($role === 'member') {
+        $sql_get_next_card = "SELECT MAX(CAST(old_card AS UNSIGNED)) as max_card FROM users WHERE role = 'member' AND old_card IS NOT NULL AND old_card != '' AND old_card REGEXP '^[0-9]+$'";
+        $result_next_card = mysqli_query($link, $sql_get_next_card);
+        $row_next_card = mysqli_fetch_assoc($result_next_card);
+        $next_card_number = ($row_next_card['max_card'] ?: 0) + 1;
+    }
+
     // Prepare and execute the SQL insert statement
-    // UPDATED: Changed 'password' to 'password_hash'
-    $sql = "INSERT INTO users (first_name, last_name, email, password_hash, phone_number, member_type, role, default_language, profile_picture_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    // UPDATED: Changed 'password' to 'password_hash' and added old_card
+    $sql = "INSERT INTO users (first_name, last_name, email, password_hash, phone_number, member_type, role, default_language, profile_picture_url, old_card) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     if ($stmt = mysqli_prepare($link, $sql)) {
-        // UPDATED: Corresponding change to bind_param
-        mysqli_stmt_bind_param($stmt, "sssssssss", $first_name, $last_name, $email, $hashed_password, $phone_number, $member_type, $role, $default_language, $profile_picture_url);
+        // UPDATED: Corresponding change to bind_param and added old_card
+        mysqli_stmt_bind_param($stmt, "ssssssssss", $first_name, $last_name, $email, $hashed_password, $phone_number, $member_type, $role, $default_language, $profile_picture_url, $next_card_number);
         
         if (!mysqli_stmt_execute($stmt)) {
             throw new Exception('Error adding member: ' . mysqli_error($link));

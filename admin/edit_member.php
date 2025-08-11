@@ -215,10 +215,10 @@ $categories = array_unique(array_column($membership_plans, 'category'));
                                 <label for="member_type" class="block text-sm font-medium text-gray-700">Member Type</label>
                                 <select id="member_type" name="member_type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2">
                                     <?php
-                                    $member_types = ['Adult', 'Kid'];
+                                    $member_types = ['adult', 'child'];
                                     foreach ($member_types as $type) {
                                         $selected = ($member['member_type'] == $type) ? 'selected' : '';
-                                        echo "<option value='$type' $selected>" . htmlspecialchars($type) . "</option>";
+                                        echo "<option value='$type' $selected>" . htmlspecialchars(ucfirst($type)) . "</option>";
                                     }
                                     ?>
                                 </select>

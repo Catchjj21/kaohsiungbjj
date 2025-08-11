@@ -2,15 +2,15 @@
 // Start output buffering to prevent "headers already sent" errors
 ob_start();
 
-// THE FIX: Include the database config FIRST.
+// Include the standardized session management
+require_once "session_manager.php";
+
+// Include the database config FIRST.
 // This loads the session cookie settings BEFORE the session is started.
 require_once "db_config.php";
 
-// Now that the settings are loaded, start the session.
-session_start();
-
-// If the user is already logged in as an admin, send them directly to the dashboard
-if(isset($_SESSION["admin_loggedin"]) && $_SESSION["admin_loggedin"] === true){
+// Check if the user is already logged in as an admin
+if(isLoggedIn(['admin', 'coach'])){
     header("location: admin/admin_dashboard.php");
     exit;
 }
@@ -51,13 +51,13 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     if(mysqli_stmt_fetch($stmt)){
                         if(password_verify($password, $hashed_password)){
                             if($role === 'admin' || $role === 'coach'){
-                                $_SESSION["admin_loggedin"] = true;
-                                $_SESSION["id"] = $id;
-                                $_SESSION["full_name"] = trim($first_name . " " . $last_name);
-                                $_SESSION["email"] = $email_from_db;
-                                $_SESSION["role"] = $role;                      
+                                // Create standardized session for admin login
+                                $session_data = createStandardizedSession($id, $first_name, $last_name, $email_from_db, $role, true);
                                 
-                                header("location: admin/admin_dashboard.php");
+                                // Get redirect URL for admin login
+                                $redirect_url = getRedirectUrl($role, true);
+                                
+                                header("location: " . $redirect_url);
                                 exit;
                             } else {
                                 $login_err = "Access Denied. This portal is for authorized staff only.";

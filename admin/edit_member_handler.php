@@ -38,33 +38,44 @@ if(!isset($_SESSION["admin_loggedin"]) || $_SESSION["admin_loggedin"] !== true |
 }
 
 if($_SERVER["REQUEST_METHOD"] == "POST"){
+    // Log the request for debugging
+    error_log("Edit member handler called with POST data: " . json_encode($_POST));
+    
     // Retrieve all form fields
-    $user_id = $_POST['user_id'];
-    $membership_id = $_POST['membership_id'];
-    $first_name = trim($_POST['first_name']);
-    $last_name = trim($_POST['last_name']);
-    $email = trim($_POST['email']);
-    $phone_number = trim($_POST['phone_number']);
+    $user_id = $_POST['user_id'] ?? '';
+    $membership_id = $_POST['membership_id'] ?? '';
+    $first_name = trim($_POST['first_name'] ?? '');
+    $last_name = trim($_POST['last_name'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $phone_number = trim($_POST['phone_number'] ?? '');
     
-    $member_type = trim($_POST['member_type']);
-    $role = trim($_POST['role']);
+    $member_type = trim($_POST['member_type'] ?? '');
+    $role = trim($_POST['role'] ?? '');
     
-    $belt_color = trim($_POST['belt_color']);
-    $dob = trim($_POST['dob']);
-    $line_id = trim($_POST['line_id']);
-    $address = trim($_POST['address']);
-    $chinese_name = trim($_POST['chinese_name']);
+    $belt_color = trim($_POST['belt_color'] ?? '');
+    $dob = trim($_POST['dob'] ?? '');
+    $line_id = trim($_POST['line_id'] ?? '');
+    $address = trim($_POST['address'] ?? '');
+    $chinese_name = trim($_POST['chinese_name'] ?? '');
     
-    $default_language = trim($_POST['default_language']);
-    $old_card = trim($_POST['old_card']);
+    $default_language = trim($_POST['default_language'] ?? 'en');
+    $old_card = trim($_POST['old_card'] ?? '');
     
     // FIX: The form now sends the plan ID, not the name.
     $membership_plan_id = trim($_POST['membership_plan_id'] ?? '');
     $start_date = trim($_POST['start_date'] ?? '');
     $end_date = trim($_POST['end_date'] ?? '');
-    $class_credits = !empty($_POST['class_credits']) ? (int)$_POST['class_credits'] : NULL;
+    $class_credits = !empty($_POST['class_credits']) ? (int)$_POST['class_credits'] : 0;
+    if ($class_credits < 0) $class_credits = 0; // Ensure non-negative
     $cropped_image_data = $_POST['cropped_image_data'] ?? null;
     $profile_picture_url = null; // Initialize the variable for the new profile picture URL
+    
+    // Validate required fields
+    if (empty($user_id) || empty($first_name) || empty($last_name) || empty($email)) {
+        error_log("Missing required fields in edit member form");
+        header("location: manage_members.php?error=missing_required_fields");
+        exit;
+    }
 
     // Process the cropped image data if it exists
     if (!empty($cropped_image_data)) {
@@ -110,7 +121,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             $profile_picture_url = $relative_path;
         } else {
             error_log("Error saving the new profile picture to file: " . $file_path);
-            echo "Error saving the new profile picture.";
+            header("location: manage_members.php?error=image_save_failed");
             exit;
         }
     } else {
@@ -134,12 +145,14 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                                $profile_picture_url, $default_language, $old_card, $user_id);
         
         if(!mysqli_stmt_execute($stmt_user)){
-            echo "Error updating user: " . mysqli_error($link);
+            error_log("Error updating user: " . mysqli_error($link));
+            header("location: manage_members.php?error=user_update_failed");
             exit;
         }
         mysqli_stmt_close($stmt_user);
     } else {
-        echo "Error preparing user update statement: " . mysqli_error($link);
+        error_log("Error preparing user update statement: " . mysqli_error($link));
+        header("location: manage_members.php?error=user_update_failed");
         exit;
     }
 
@@ -166,26 +179,30 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             if($stmt_membership = mysqli_prepare($link, $sql_membership)){
                 mysqli_stmt_bind_param($stmt_membership, "sssii", $membership_type_plan, $start_date, $end_date, $class_credits, $membership_id);
                 if(!mysqli_stmt_execute($stmt_membership)){
-                    echo "Error updating membership: " . mysqli_error($link);
+                    error_log("Error updating membership: " . mysqli_error($link));
+                    header("location: manage_members.php?error=membership_update_failed");
                     exit;
                 }
                 mysqli_stmt_close($stmt_membership);
             } else {
-                echo "Error preparing membership update statement: " . mysqli_error($link);
+                error_log("Error preparing membership update statement: " . mysqli_error($link));
+                header("location: manage_members.php?error=membership_update_failed");
                 exit;
             }
         } else {
-            $sql_membership = "INSERT INTO memberships (user_id, membership_type, start_date, end_date, class_credits, status) VALUES (?, ?, ?, ?, ?, 'active')";
+            $sql_membership = "INSERT INTO memberships (user_id, membership_type, start_date, end_date, class_credits) VALUES (?, ?, ?, ?, ?)";
             if($stmt_membership = mysqli_prepare($link, $sql_membership)){
                 mysqli_stmt_bind_param($stmt_membership, "isssi", $user_id, $membership_type_plan, $start_date, $end_date, $class_credits);
 
                 if(!mysqli_stmt_execute($stmt_membership)){
-                    echo "Error inserting membership: " . mysqli_error($link);
+                    error_log("Error inserting membership: " . mysqli_error($link));
+                    header("location: manage_members.php?error=membership_insert_failed");
                     exit;
                 }
                 mysqli_stmt_close($stmt_membership);
             } else {
-                echo "Error preparing membership insert statement: " . mysqli_error($link);
+                error_log("Error preparing membership insert statement: " . mysqli_error($link));
+                header("location: manage_members.php?error=membership_insert_failed");
                 exit;
             }
         }
@@ -195,12 +212,14 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             if($stmt_delete = mysqli_prepare($link, $sql_delete_membership)){
                 mysqli_stmt_bind_param($stmt_delete, "i", $membership_id);
                 if(!mysqli_stmt_execute($stmt_delete)){
-                    echo "Error deleting membership: " . mysqli_error($link);
+                    error_log("Error deleting membership: " . mysqli_error($link));
+                    header("location: manage_members.php?error=membership_delete_failed");
                     exit;
                 }
                 mysqli_stmt_close($stmt_delete);
             } else {
-                echo "Error preparing membership delete statement: " . mysqli_error($link);
+                error_log("Error preparing membership delete statement: " . mysqli_error($link));
+                header("location: manage_members.php?error=membership_delete_failed");
                 exit;
             }
         }

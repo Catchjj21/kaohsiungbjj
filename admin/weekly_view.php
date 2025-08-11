@@ -205,7 +205,10 @@ $days_of_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturd
                                 <tbody>`;
             bookings.forEach(booking => {
                 tableHtml += `<tr class="border-b">
-                                <td class="py-2">${booking.member_name}</td>
+                                <td class="py-2 flex items-center">
+                                    <img src="${booking.profile_picture_url}" class="w-8 h-8 rounded-full mr-3 object-cover" onerror="this.onerror=null;this.src='https://placehold.co/32x32/e2e8f0/333333?text=Pic';">
+                                    ${booking.member_name}
+                                </td>
                                 <td><span class="px-2 py-1 text-xs font-semibold rounded-full ${booking.status === 'attended' ? 'bg-green-200 text-green-800' : 'bg-blue-200 text-blue-800'}">${booking.status}</span></td>
                                 <td><button class="text-red-500 hover:underline text-sm cancel-booking-btn" data-booking-id="${booking.booking_id}">Cancel</button></td>
                               </tr>`;

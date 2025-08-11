@@ -31,8 +31,8 @@ if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET['class_id']) && isset($_
     $class_id = $_GET['class_id'];
     $date = $_GET['date'];
 
-    // SQL: Select booking details and member names
-    $sql = "SELECT b.id AS booking_id, b.status, u.first_name, u.last_name FROM bookings b JOIN users u ON b.user_id = u.id WHERE b.class_id = ? AND b.booking_date = ?";
+    // SQL: Select booking details, member names, and profile pictures
+    $sql = "SELECT b.id AS booking_id, b.status, u.first_name, u.last_name, u.profile_picture_url FROM bookings b JOIN users u ON b.user_id = u.id WHERE b.class_id = ? AND b.booking_date = ?";
     
     $bookings = [];
     if($stmt = mysqli_prepare($link, $sql)){
@@ -44,6 +44,21 @@ if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET['class_id']) && isset($_
                 while($row = mysqli_fetch_assoc($result)){
                     // Concatenate first_name and last_name for display
                     $row['member_name'] = trim($row['first_name'] . ' ' . $row['last_name']);
+                    
+                    // Process profile picture URL
+                    $profile_pic = 'https://placehold.co/100x100/e2e8f0/333333?text=Pic'; // Default placeholder
+                    
+                    if (!empty($row['profile_picture_url'])) {
+                        // The path from the DB is relative to the root.
+                        // This script is in the 'admin' directory, so we go up one level.
+                        $correct_path = '../' . $row['profile_picture_url'];
+                        
+                        if (file_exists($correct_path)) {
+                            $profile_pic = $correct_path;
+                        }
+                    }
+                    $row['profile_picture_url'] = $profile_pic;
+                    
                     $bookings[] = $row;
                 }
                 echo json_encode(["status" => "success", "data" => $bookings]);

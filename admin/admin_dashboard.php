@@ -4,15 +4,15 @@ require_once "../db_config.php";
 
 // Now that the settings are loaded, start the session.
 session_start();
- 
-// Check if the user is logged in and is an admin or coach.
-if(!isset($_SESSION["admin_loggedin"]) || $_SESSION["admin_loggedin"] !== true || !in_array($_SESSION["role"], ['admin', 'coach'])){
-    // FIX: Corrected the relative path to the login page.
-    header("location: ../admin_login.html");
-    exit;
-}
+
+// Include the admin authentication helper
+require_once "admin_auth.php";
+
+// Check if the user has admin access
+requireAdminAccess(['admin', 'coach']);
 
 $user_id = $_SESSION['id'];
+ 
 // --- Fetch Stats for the Dashboard ---
 $total_members_sql = "SELECT COUNT(id) AS total_members FROM users WHERE role = 'member'";
 $total_members_result = mysqli_query($link, $total_members_sql);
@@ -197,6 +197,13 @@ mysqli_close($link);
                     <p class="text-gray-600 mt-1">Link child accounts to their parent's account.</p>
                     <a href="manage_family_linking.php" class="mt-4 inline-block bg-orange-500 text-white font-bold py-2.5 px-6 rounded-lg hover:bg-orange-600 transition">
                         Go to Family Linking
+                    </a>
+                </div>
+                <div class="bg-white p-8 rounded-2xl shadow-lg">
+                    <h2 class="text-2xl font-bold text-gray-800">Payment Management</h2>
+                    <p class="text-gray-600 mt-1">Track and manage member payment status and overdue accounts.</p>
+                    <a href="payment_management.php" class="mt-4 inline-block bg-red-500 text-white font-bold py-2.5 px-6 rounded-lg hover:bg-red-600 transition">
+                        Go to Payment Management
                     </a>
                 </div>
             </div>

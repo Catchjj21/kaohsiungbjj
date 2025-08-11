@@ -237,6 +237,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['action'])) {
                 }
             }
             break;
+
+        case 'delete_message':
+            $recipient_id = $_POST['recipient_id'] ?? 0;
+            if ($recipient_id > 0) {
+                // Verify the message belongs to the current user and get thread info
+                $sql_verify = "SELECT COALESCE(m.thread_id, m.id) as thread_id FROM message_recipients mr JOIN messages m ON mr.message_id = m.id WHERE mr.id = ? AND mr.recipient_id = ?";
+                $stmt_verify = mysqli_prepare($link, $sql_verify);
+                mysqli_stmt_bind_param($stmt_verify, "ii", $recipient_id, $user_id);
+                mysqli_stmt_execute($stmt_verify);
+                $thread_info = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt_verify));
+                mysqli_stmt_close($stmt_verify);
+
+                if (!$thread_info) {
+                    echo json_encode(['success' => false, 'message' => 'Message not found or permission denied.']);
+                    exit;
+                }
+
+                $thread_id = $thread_info['thread_id'];
+
+                // Delete all message_recipients for this user in this thread
+                $sql_delete = "DELETE mr FROM message_recipients mr 
+                              JOIN messages m ON mr.message_id = m.id 
+                              WHERE mr.recipient_id = ? AND (m.id = ? OR m.thread_id = ?)";
+                $stmt_delete = mysqli_prepare($link, $sql_delete);
+                mysqli_stmt_bind_param($stmt_delete, "iii", $user_id, $thread_id, $thread_id);
+                
+                if (mysqli_stmt_execute($stmt_delete)) {
+                    $affected_rows = mysqli_stmt_affected_rows($stmt_delete);
+                    if ($affected_rows > 0) {
+                        echo json_encode(['success' => true, 'message' => 'Message thread deleted successfully.']);
+                    } else {
+                        echo json_encode(['success' => false, 'message' => 'Could not delete message or permission denied.']);
+                    }
+                } else {
+                    echo json_encode(['success' => false, 'message' => 'Database error.']);
+                }
+                mysqli_stmt_close($stmt_delete);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Invalid message ID.']);
+            }
+            break;
     }
     mysqli_close($link);
     exit;
@@ -560,7 +601,20 @@ mysqli_close($link);
         });
 
         function renderThread(threadMessages, originalRecipientId) {
-            let threadHtml = '<div class="flex-grow overflow-y-auto p-4 space-y-4">';
+            // Add thread header with delete button
+            let threadHtml = `
+                <div class="flex-shrink-0 pb-4 border-b flex justify-between items-center">
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-900">${threadMessages[0]?.subject || 'Conversation'}</h3>
+                        <p class="text-sm text-gray-500 mt-1">${threadMessages.length} messages</p>
+                    </div>
+                    <button class="delete-message-btn text-red-500 hover:text-red-700 font-semibold text-sm px-3 py-1 rounded border border-red-300 hover:bg-red-50 transition-colors" data-recipient-id="${originalRecipientId}">
+                        Delete Thread
+                    </button>
+                </div>
+            `;
+            
+            threadHtml += '<div class="flex-grow overflow-y-auto p-4 space-y-4">';
             threadMessages.forEach(msg => {
                 threadHtml += createMessageHtml(msg);
             });
@@ -593,6 +647,12 @@ mysqli_close($link);
             if(threadContainer) threadContainer.scrollTop = threadContainer.scrollHeight;
 
             document.getElementById('reply-form').addEventListener('submit', handleReplySubmit);
+            
+            // Add event listener for delete button
+            const deleteBtn = messageViewerContent.querySelector('.delete-message-btn');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', handleDeleteThread);
+            }
         }
 
         function createMessageHtml(msg) {
@@ -660,6 +720,39 @@ mysqli_close($link);
                     item.querySelector('p:last-child').classList.add('text-gray-500');
                 }
             });
+        }
+
+        function handleDeleteThread(e) {
+            e.preventDefault();
+            const deleteBtn = e.target.closest('.delete-message-btn');
+            if (!deleteBtn) return;
+
+            const recipientId = deleteBtn.dataset.recipientId;
+            if (confirm('Are you sure you want to delete this conversation? This action cannot be undone.')) {
+                const formData = new FormData();
+                formData.append('action', 'delete_message');
+                formData.append('recipient_id', recipientId);
+
+                fetch('admin_messaging.php', { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        // Remove from UI
+                        const itemToRemove = messageList.querySelector(`.message-item[data-recipient-id="${recipientId}"]`);
+                        if (itemToRemove) itemToRemove.remove();
+                        
+                        // Clear message viewer
+                        messageViewerContent.classList.add('hidden');
+                        messageViewerPlaceholder.classList.remove('hidden');
+                        messageViewerPlaceholder.innerHTML = '<p class="text-gray-400">Select a message to read</p>';
+                        
+                        alert(data.message);
+                    } else {
+                        alert(data.message || 'Failed to delete conversation.');
+                    }
+                })
+                .catch(() => alert('An error occurred while deleting the conversation.'));
+            }
         }
     });
     </script>

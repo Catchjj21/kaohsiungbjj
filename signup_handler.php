@@ -104,11 +104,17 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     // Proceed if no errors
     if(empty($errors)){
         
-        $sql = "INSERT INTO users (first_name, last_name, email, dob, member_type, password_hash, verification_token, line_id, address, chinese_name, waiver_acceptance) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        // Get the next available old_card number
+        $sql_get_next_card = "SELECT MAX(CAST(old_card AS UNSIGNED)) as max_card FROM users WHERE role = 'member' AND old_card IS NOT NULL AND old_card != '' AND old_card REGEXP '^[0-9]+$'";
+        $result_next_card = mysqli_query($link, $sql_get_next_card);
+        $row_next_card = mysqli_fetch_assoc($result_next_card);
+        $next_card_number = ($row_next_card['max_card'] ?: 0) + 1;
+        
+        $sql = "INSERT INTO users (first_name, last_name, email, dob, member_type, password_hash, verification_token, line_id, address, chinese_name, waiver_acceptance, old_card) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             
         if($stmt = mysqli_prepare($link, $sql)){
             $verification_token = bin2hex(random_bytes(50));
-            mysqli_stmt_bind_param($stmt, "ssssssssssi", $param_first_name, $param_last_name, $param_email, $param_dob, $param_member_type, $param_password, $param_token, $param_line_id, $param_address, $param_chinese_name, $param_waiver_acceptance);
+            mysqli_stmt_bind_param($stmt, "sssssssssssi", $param_first_name, $param_last_name, $param_email, $param_dob, $param_member_type, $param_password, $param_token, $param_line_id, $param_address, $param_chinese_name, $param_waiver_acceptance, $param_old_card);
             
             $param_first_name = $first_name;
             $param_last_name = $last_name;
@@ -121,6 +127,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             $param_address = $address;
             $param_chinese_name = $chinese_name;
             $param_waiver_acceptance = $waiver_acceptance; // Will be 1 (true) if accepted
+            $param_old_card = $next_card_number;
             
             if(mysqli_stmt_execute($stmt)){
                 // Get the ID of the new user

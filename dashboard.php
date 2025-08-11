@@ -4,26 +4,30 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+// Include the session middleware for standardized session management
+require_once "session_middleware.php";
+
 // Include the database config FIRST. This is important if it contains session settings.
 require_once "db_config.php";
 
-// Start the session once at the beginning of the script.
-session_start();
+// Require user to be logged in
+requireLogin();
+
+// Get current user information
+$user_id = getCurrentUserId();
+$user_name = getCurrentUserName();
+$user_role = getCurrentUserRole();
+
+// Initialize language from session or default to English
+$lang = $_SESSION['lang'] ?? 'en';
 
 // --- START AJAX HANDLER ---
 // This block handles asynchronous requests from the JavaScript on the page.
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['action'])) {
-    // The session is already started, so we can directly access session variables.
-    // Ensure user is logged in for these actions
-    if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
-        echo json_encode(['success' => false, 'message' => 'Authentication required.']);
-        exit;
-    }
+    // Validate session for AJAX requests
+    validateSessionForAjax();
 
-    $user_id = $_SESSION['id'];
     $action = $_POST['action'];
-
-    header('Content-Type: application/json');
 
     switch ($action) {
         case 'book_class':
@@ -102,154 +106,81 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['action'])) {
 
                 mysqli_commit($link);
                 echo json_encode(['success' => true, 'message' => 'Class booked successfully!']);
-            } catch (mysqli_sql_exception $exception) {
+            } catch (Exception $e) {
                 mysqli_rollback($link);
-                error_log("Booking failed: " . $exception->getMessage());
-                echo json_encode(['success' => false, 'message' => 'An error occurred. Please try again.']);
-            }
-            break;
-
-        case 'cancel_class':
-            $class_id = $_POST['class_id'] ?? 0;
-            $booking_date = $_POST['booking_date'] ?? '';
-
-            mysqli_begin_transaction($link);
-            try {
-                $check_sql = "SELECT m.end_date, m.membership_type FROM memberships m WHERE m.user_id = ? AND m.end_date = (SELECT MAX(end_date) FROM memberships WHERE user_id = ?)";
-                $stmt_check = mysqli_prepare($link, $check_sql);
-                mysqli_stmt_bind_param($stmt_check, "ii", $user_id, $user_id);
-                mysqli_stmt_execute($stmt_check);
-                $member_info = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt_check));
-                mysqli_stmt_close($stmt_check);
-
-                $delete_sql = "DELETE FROM bookings WHERE user_id = ? AND class_id = ? AND booking_date = ?";
-                $stmt_delete = mysqli_prepare($link, $delete_sql);
-                mysqli_stmt_bind_param($stmt_delete, "iis", $user_id, $class_id, $booking_date);
-                mysqli_stmt_execute($stmt_delete);
-                $affected_rows = mysqli_stmt_affected_rows($stmt_delete);
-                mysqli_stmt_close($stmt_delete);
-
-                if ($affected_rows > 0 && $member_info && strpos($member_info['membership_type'], 'Class') !== false) {
-                    $update_sql = "UPDATE memberships SET class_credits = class_credits + 1 WHERE user_id = ? AND end_date = ?";
-                    $stmt_update = mysqli_prepare($link, $update_sql);
-                    mysqli_stmt_bind_param($stmt_update, "is", $user_id, $member_info['end_date']);
-                    mysqli_stmt_execute($stmt_update);
-                    mysqli_stmt_close($stmt_update);
-                }
-
-                $waitlist_sql = "SELECT user_id FROM waitlist WHERE class_id = ? AND booking_date = ? ORDER BY request_date ASC LIMIT 1";
-                $stmt_waitlist = mysqli_prepare($link, $waitlist_sql);
-                mysqli_stmt_bind_param($stmt_waitlist, "is", $class_id, $booking_date);
-                mysqli_stmt_execute($stmt_waitlist);
-                $waitlist_user_result = mysqli_stmt_get_result($stmt_waitlist);
-                $waitlist_user = mysqli_fetch_assoc($waitlist_user_result);
-                mysqli_stmt_close($stmt_waitlist);
-
-                if ($waitlist_user) {
-                    $waitlist_user_id = $waitlist_user['user_id'];
-                    $auto_book_sql = "INSERT INTO bookings (user_id, class_id, booking_date, status) VALUES (?, ?, ?, 'booked')";
-                    $stmt_auto_book = mysqli_prepare($link, $auto_book_sql);
-                    mysqli_stmt_bind_param($stmt_auto_book, "iis", $waitlist_user_id, $class_id, $booking_date);
-                    mysqli_stmt_execute($stmt_auto_book);
-                    mysqli_stmt_close($stmt_auto_book);
-
-                    $remove_waitlist_sql = "DELETE FROM waitlist WHERE user_id = ? AND class_id = ? AND booking_date = ?";
-                    $stmt_remove_waitlist = mysqli_prepare($link, $remove_waitlist_sql);
-                    mysqli_stmt_bind_param($stmt_remove_waitlist, "iis", $waitlist_user_id, $class_id, $booking_date);
-                    mysqli_stmt_execute($stmt_remove_waitlist);
-                    mysqli_stmt_close($stmt_remove_waitlist);
-
-                    error_log("Waitlisted user {$waitlist_user_id} was auto-booked for class {$class_id} on {$booking_date}.");
-                }
-
-                mysqli_commit($link);
-                echo json_encode(['success' => true, 'message' => 'Booking cancelled successfully!']);
-            } catch (mysqli_sql_exception $exception) {
-                mysqli_rollback($link);
-                error_log("Cancellation failed: " . $exception->getMessage());
-                echo json_encode(['success' => false, 'message' => 'An error occurred during cancellation.']);
-            }
-            break;
-
-        case 'join_waitlist':
-            $class_id = $_POST['class_id'] ?? 0;
-            $booking_date = $_POST['booking_date'] ?? '';
-
-            $waitlist_check_sql = "SELECT COUNT(*) FROM waitlist WHERE user_id = ? AND class_id = ? AND booking_date = ?";
-            $stmt_waitlist_check = mysqli_prepare($link, $waitlist_check_sql);
-            mysqli_stmt_bind_param($stmt_waitlist_check, "iis", $user_id, $class_id, $booking_date);
-            mysqli_stmt_execute($stmt_waitlist_check);
-            $waitlist_count = mysqli_fetch_row(mysqli_stmt_get_result($stmt_waitlist_check))[0];
-            mysqli_stmt_close($stmt_waitlist_check);
-
-            if ($waitlist_count > 0) {
-                echo json_encode(['success' => false, 'message' => 'You are already on the waitlist for this class.']);
-                exit;
-            }
-
-            $waitlist_sql = "INSERT INTO waitlist (user_id, class_id, booking_date) VALUES (?, ?, ?)";
-            if ($stmt = mysqli_prepare($link, $waitlist_sql)) {
-                mysqli_stmt_bind_param($stmt, "iis", $user_id, $class_id, $booking_date);
-                mysqli_stmt_execute($stmt);
-                mysqli_stmt_close($stmt);
-                echo json_encode(['success' => true, 'message' => 'You have been added to the waitlist for this class.']);
-            } else {
-                echo json_encode(['success' => false, 'message' => 'Database error.']);
+                echo json_encode(['success' => false, 'message' => 'Booking failed. Please try again.']);
             }
             exit;
 
-        case 'submit_payment':
-            $payment_method = $_POST['payment_method'] ?? 'N/A';
-            $amount = $_POST['amount'] ?? '0';
-            $last_five = $_POST['last_five'] ?? '';
-            $member_name = $_SESSION['full_name'];
-            $member_email = $_SESSION['email'];
+        case 'cancel_booking':
+            $booking_id = $_POST['booking_id'] ?? 0;
+            
+            // Verify the booking belongs to the current user
+            $verify_sql = "SELECT b.*, c.name as class_name FROM bookings b JOIN classes c ON b.class_id = c.id WHERE b.id = ? AND b.user_id = ?";
+            $stmt_verify = mysqli_prepare($link, $verify_sql);
+            mysqli_stmt_bind_param($stmt_verify, "ii", $booking_id, $user_id);
+            mysqli_stmt_execute($stmt_verify);
+            $booking_info = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt_verify));
+            mysqli_stmt_close($stmt_verify);
 
-            $stmt_pic = mysqli_prepare($link, "SELECT profile_picture_url FROM users WHERE id = ?");
-            mysqli_stmt_bind_param($stmt_pic, "i", $user_id);
-            mysqli_stmt_execute($stmt_pic);
-            $result_pic = mysqli_stmt_get_result($stmt_pic);
-            $user_data = mysqli_fetch_assoc($result_pic);
-            $profile_pic_path = $user_data['profile_picture_url'] ?? null;
-            mysqli_stmt_close($stmt_pic);
-
-            $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
-            $domain_name = $_SERVER['HTTP_HOST'];
-            $base_url = rtrim($protocol . $domain_name, '/');
-            $logo_url = $base_url . '/logo.png';
-
-            $profile_pic_url = 'https://placehold.co/80x80/e2e8f0/333333?text=Pic';
-            if ($profile_pic_path) {
-                if (preg_match('/^https?:\/\//', $profile_pic_path)) {
-                    $profile_pic_url = $profile_pic_path;
-                } else {
-                    $profile_pic_url = $base_url . '/' . ltrim($profile_pic_path, '/');
-                }
+            if (!$booking_info) {
+                echo json_encode(['success' => false, 'message' => 'Booking not found or unauthorized.']);
+                exit;
             }
 
-            $to = 'catchjiujitsu@gmail.com';
-            $subject = 'New Payment Submission from ' . $member_name;
-            $headers = "MIME-Version: 1.0" . "\r\n";
-            $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-            $headers .= 'From: <webmaster@yourdomain.com>' . "\r\n";
-
-            $message = "
-            <html><body>
-                <p>Payment submitted for member: <strong>{$member_name}</strong></p>
-                <p>Email: {$member_email}</p>
-                <p>Method: {$payment_method}</p>
-                <p>Amount: {$amount}</p>";
-            if ($payment_method === 'Bank Transfer' && !empty($last_five)) {
-                $message .= "<p>Last 5 Digits: {$last_five}</p>";
-            }
-            $message .= "</body></html>";
-
-            if (mail($to, $subject, $message, $headers)) {
-                echo json_encode(['success' => true, 'message' => 'Your payment submission has been sent!']);
+            // Delete the booking
+            $delete_sql = "DELETE FROM bookings WHERE id = ? AND user_id = ?";
+            $stmt_delete = mysqli_prepare($link, $delete_sql);
+            mysqli_stmt_bind_param($stmt_delete, "ii", $booking_id, $user_id);
+            
+            if (mysqli_stmt_execute($stmt_delete)) {
+                echo json_encode(['success' => true, 'message' => 'Booking cancelled successfully.']);
             } else {
-                echo json_encode(['success' => false, 'message' => 'There was an error sending your payment submission.']);
+                echo json_encode(['success' => false, 'message' => 'Failed to cancel booking.']);
             }
-            break;
+            mysqli_stmt_close($stmt_delete);
+            exit;
+
+        case 'delete_message':
+            $recipient_id = $_POST['recipient_id'] ?? 0;
+            if ($recipient_id > 0) {
+                // Verify the message belongs to the current user and get thread info
+                $sql_verify = "SELECT COALESCE(m.thread_id, m.id) as thread_id FROM message_recipients mr JOIN messages m ON mr.message_id = m.id WHERE mr.id = ? AND mr.recipient_id = ?";
+                $stmt_verify = mysqli_prepare($link, $sql_verify);
+                mysqli_stmt_bind_param($stmt_verify, "ii", $recipient_id, $user_id);
+                mysqli_stmt_execute($stmt_verify);
+                $thread_info = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt_verify));
+                mysqli_stmt_close($stmt_verify);
+
+                if (!$thread_info) {
+                    echo json_encode(['success' => false, 'message' => 'Message not found or permission denied.']);
+                    exit;
+                }
+
+                $thread_id = $thread_info['thread_id'];
+
+                // Delete all message_recipients for this user in this thread
+                $sql_delete = "DELETE mr FROM message_recipients mr 
+                              JOIN messages m ON mr.message_id = m.id 
+                              WHERE mr.recipient_id = ? AND (m.id = ? OR m.thread_id = ?)";
+                $stmt_delete = mysqli_prepare($link, $sql_delete);
+                mysqli_stmt_bind_param($stmt_delete, "iii", $user_id, $thread_id, $thread_id);
+                
+                if (mysqli_stmt_execute($stmt_delete)) {
+                    $affected_rows = mysqli_stmt_affected_rows($stmt_delete);
+                    if ($affected_rows > 0) {
+                        echo json_encode(['success' => true, 'message' => 'Message thread deleted successfully.']);
+                    } else {
+                        echo json_encode(['success' => false, 'message' => 'Could not delete message or permission denied.']);
+                    }
+                } else {
+                    echo json_encode(['success' => false, 'message' => 'Database error.']);
+                }
+                mysqli_stmt_close($stmt_delete);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Invalid message ID.']);
+            }
+            exit;
 
         case 'reply_message':
             $original_recipient_id = $_POST['original_recipient_id'] ?? 0;
@@ -320,10 +251,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['action'])) {
 
             } catch (Exception $e) {
                 mysqli_rollback($link);
-                error_log("Reply failed: " . $e->getMessage());
                 echo json_encode(['success' => false, 'message' => 'An error occurred while sending the reply.']);
             }
-            break;
+            exit;
 
         case 'get_message_thread':
             $recipient_id = $_POST['recipient_id'] ?? 0;
@@ -363,7 +293,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['action'])) {
             mysqli_stmt_close($stmt_thread);
 
             echo json_encode(['success' => true, 'thread' => $thread_messages]);
-            break;
+            exit;
 
         case 'mark_as_read':
             // This action will now mark a whole thread as read
@@ -402,31 +332,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['action'])) {
             } else {
                 echo json_encode(['success' => false, 'message' => 'Invalid message ID.']);
             }
-            break;
+            exit;
 
-        case 'delete_message':
-            $recipient_id = $_POST['recipient_id'] ?? 0;
-            if ($recipient_id > 0) {
-                $sql_delete = "DELETE FROM message_recipients WHERE id = ? AND recipient_id = ?";
-                if ($stmt_delete = mysqli_prepare($link, $sql_delete)) {
-                    mysqli_stmt_bind_param($stmt_delete, "ii", $recipient_id, $user_id);
-                    mysqli_stmt_execute($stmt_delete);
-                    if (mysqli_stmt_affected_rows($stmt_delete) > 0) {
-                        echo json_encode(['success' => true, 'message' => 'Message deleted.']);
-                    } else {
-                        echo json_encode(['success' => false, 'message' => 'Could not delete message or permission denied.']);
-                    }
-                    mysqli_stmt_close($stmt_delete);
-                } else {
-                    echo json_encode(['success' => false, 'message' => 'Database error.']);
-                }
-            } else {
-                echo json_encode(['success' => false, 'message' => 'Invalid message ID.']);
-            }
-            break;
+        default:
+            echo json_encode(['success' => false, 'message' => 'Invalid action.']);
+            exit;
     }
-    mysqli_close($link);
-    exit;
 }
 // --- END AJAX HANDLER ---
 
@@ -531,7 +442,7 @@ if($stmt_unread = mysqli_prepare($link, $sql_unread_total)) {
 
 
 // --- Fetch Member Details ---
-$member_details_sql = "SELECT u.belt_color, u.profile_picture_url, u.member_type, m.membership_type, m.end_date, m.class_credits FROM users u LEFT JOIN memberships m ON u.id = m.user_id AND m.end_date = (SELECT MAX(end_date) FROM memberships WHERE user_id = u.id) WHERE u.id = ?";
+$member_details_sql = "SELECT u.belt_color, u.profile_picture_url, u.member_type, u.old_card, m.membership_type, m.end_date, m.class_credits FROM users u LEFT JOIN memberships m ON u.id = m.user_id AND m.end_date = (SELECT MAX(end_date) FROM memberships WHERE user_id = u.id) WHERE u.id = ?";
 $member_details = null;
 if ($stmt_member = mysqli_prepare($link, $member_details_sql)) {
     mysqli_stmt_bind_param($stmt_member, "i", $user_id);
@@ -649,9 +560,9 @@ foreach ($schedule as $day => &$classes_for_day) {
 }
 unset($classes_for_day);
 
-// --- Fetch Billing History for the new section ---
+// --- Fetch Enhanced Billing History and Payment Data ---
 $billing_history = [];
-$billing_sql = "SELECT membership_type, end_date, class_credits FROM memberships WHERE user_id = ? ORDER BY end_date DESC";
+$billing_sql = "SELECT m.membership_type, m.end_date, m.class_credits, m.payment_status, m.payment_due_date, m.last_payment_date, m.payment_amount FROM memberships m WHERE m.user_id = ? ORDER BY m.end_date DESC";
 if ($stmt_billing = mysqli_prepare($link, $billing_sql)) {
     mysqli_stmt_bind_param($stmt_billing, "i", $user_id);
     if (mysqli_stmt_execute($stmt_billing)) {
@@ -663,6 +574,28 @@ if ($stmt_billing = mysqli_prepare($link, $billing_sql)) {
     mysqli_stmt_close($stmt_billing);
 } else {
     error_log("SQL Prepare Error fetching billing history: " . mysqli_error($link));
+}
+
+// --- Fetch Payment History ---
+$payment_history = [];
+$payment_sql = "SELECT ph.payment_amount, ph.payment_date, ph.payment_method, ph.payment_status, ph.notes, m.membership_type FROM payment_history ph LEFT JOIN memberships m ON ph.membership_id = m.id WHERE ph.user_id = ? ORDER BY ph.payment_date DESC LIMIT 10";
+if ($stmt_payment = mysqli_prepare($link, $payment_sql)) {
+    mysqli_stmt_bind_param($stmt_payment, "i", $user_id);
+    if (mysqli_stmt_execute($stmt_payment)) {
+        $result_payment = mysqli_stmt_get_result($stmt_payment);
+        $payment_history = mysqli_fetch_all($result_payment, MYSQLI_ASSOC);
+    } else {
+        error_log("SQL Error fetching payment history: " . mysqli_error($link));
+    }
+    mysqli_stmt_close($stmt_payment);
+} else {
+    error_log("SQL Prepare Error fetching payment history: " . mysqli_error($link));
+}
+
+// --- Get Current Membership Status ---
+$current_membership = null;
+if (!empty($billing_history)) {
+    $current_membership = $billing_history[0]; // Most recent membership
 }
 
 
@@ -981,7 +914,7 @@ mysqli_close($link);
             </div>
         </div>
 
-        <!-- Billing/Membership Section -->
+        <!-- Enhanced Billing/Membership Section -->
         <div id="billing-view-section" class="mt-12 hidden">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-3xl font-bold text-gray-800 lang" data-lang-en="Membership & Billing" data-lang-zh="會員與帳務">Membership & Billing</h2>
@@ -989,26 +922,157 @@ mysqli_close($link);
                     <span class="lang" data-lang-en="Back to Dashboard" data-lang-zh="返回儀表板">Back to Dashboard</span>
                 </button>
             </div>
-            <div class="bg-white p-6 rounded-2xl shadow-lg">
-                <div class="flex justify-end mb-4">
-                    <button id="made-payment-btn" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition">
-                        <span class="lang" data-lang-en="Made a Payment" data-lang-zh="回報付款">Made a Payment</span>
-                    </button>
+            
+            <!-- Current Membership Status Card -->
+            <?php if ($current_membership): ?>
+                <div class="bg-white p-6 rounded-2xl shadow-lg mb-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4 lang" data-lang-en="Current Membership Status" data-lang-zh="當前會員狀態">Current Membership Status</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <p class="text-sm text-blue-600 font-semibold lang" data-lang-en="Membership Type" data-lang-zh="會員類型">Membership Type</p>
+                            <p class="text-lg font-bold text-blue-800"><?php echo htmlspecialchars($current_membership['membership_type']); ?></p>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <p class="text-sm text-green-600 font-semibold lang" data-lang-en="Expiry Date" data-lang-zh="到期日">Expiry Date</p>
+                            <p class="text-lg font-bold text-green-800"><?php echo date("M d, Y", strtotime($current_membership['end_date'])); ?></p>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded-lg">
+                            <p class="text-sm text-purple-600 font-semibold lang" data-lang-en="Payment Status" data-lang-zh="付款狀態">Payment Status</p>
+                            <?php 
+                            $payment_status = $current_membership['payment_status'] ?? 'pending';
+                            $status_colors = [
+                                'paid' => 'text-green-600',
+                                'pending' => 'text-yellow-600', 
+                                'overdue' => 'text-red-600'
+                            ];
+                            $status_text = [
+                                'paid' => ['en' => 'Paid', 'zh' => '已付款'],
+                                'pending' => ['en' => 'Pending', 'zh' => '待付款'],
+                                'overdue' => ['en' => 'Overdue', 'zh' => '逾期']
+                            ];
+                            ?>
+                            <p class="text-lg font-bold <?php echo $status_colors[$payment_status]; ?>">
+                                <span class="lang" data-lang-en="<?php echo $status_text[$payment_status]['en']; ?>" data-lang-zh="<?php echo $status_text[$payment_status]['zh']; ?>"><?php echo $status_text[$payment_status]['en']; ?></span>
+                            </p>
+                        </div>
+                    </div>
+                    <?php if (isset($current_membership['class_credits']) && $current_membership['class_credits'] > 0): ?>
+                        <div class="mt-4 bg-yellow-50 p-4 rounded-lg">
+                            <p class="text-sm text-yellow-600 font-semibold lang" data-lang-en="Classes Remaining" data-lang-zh="剩餘課程">Classes Remaining</p>
+                            <p class="text-lg font-bold text-yellow-800"><?php echo $current_membership['class_credits']; ?></p>
+                        </div>
+                    <?php endif; ?>
                 </div>
+            <?php endif; ?>
+            
+            <!-- QR Code Card -->
+            <div class="bg-white p-6 rounded-2xl shadow-lg mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-gray-800 lang" data-lang-en="Member QR Code" data-lang-zh="會員QR碼">Member QR Code</h3>
+                    <?php if (isset($member_details['old_card']) && !empty($member_details['old_card'])): ?>
+                        <button id="qr-toggle-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out">
+                            <span class="lang" data-lang-en="Show QR Code" data-lang-zh="顯示QR碼">Show QR Code</span>
+                        </button>
+                    <?php endif; ?>
+                </div>
+                
+                <?php if (isset($member_details['old_card']) && !empty($member_details['old_card'])): ?>
+                    <div class="text-center mb-4">
+                        <p class="text-sm text-gray-600 mb-2 lang" data-lang-en="Card Number: " data-lang-zh="卡號：">Card Number: </p>
+                        <p class="text-2xl font-bold text-blue-600"><?php echo htmlspecialchars($member_details['old_card']); ?></p>
+                    </div>
+                    
+                    <!-- QR Code Container (initially hidden) -->
+                    <div id="qr-container" class="hidden">
+                        <div class="flex justify-center mb-4">
+                            <img src="generate_qr.php?card=<?php echo urlencode($member_details['old_card']); ?>" alt="QR Code" class="border-2 border-gray-200 rounded-lg p-4 bg-white" style="width: 200px; height: 200px;">
+                        </div>
+                        <p class="text-xs text-gray-500 text-center max-w-xs lang" data-lang-en="Show this QR code at the front desk for check-in" data-lang-zh="在前台出示此QR碼進行簽到">Show this QR code at the front desk for check-in</p>
+                    </div>
+                    
+                    <!-- Expanded QR Code Modal (initially hidden) -->
+                    <div id="qr-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+                        <div class="bg-white p-8 rounded-2xl max-w-md mx-4 relative">
+                            <button id="close-qr-modal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                            <h4 class="text-lg font-bold text-gray-800 mb-4 text-center lang" data-lang-en="Your QR Code" data-lang-zh="您的QR碼">Your QR Code</h4>
+                            <div class="text-center mb-4">
+                                <p class="text-sm text-gray-600 mb-2 lang" data-lang-en="Card Number: " data-lang-zh="卡號：">Card Number: </p>
+                                <p class="text-3xl font-bold text-blue-600 mb-4"><?php echo htmlspecialchars($member_details['old_card']); ?></p>
+                            </div>
+                            <div id="qr-expanded" class="flex justify-center mb-4">
+                                <img src="generate_qr.php?card=<?php echo urlencode($member_details['old_card']); ?>" alt="Expanded QR Code" class="border-2 border-gray-200 rounded-lg p-4 bg-white" style="width: 300px; height: 300px;">
+                            </div>
+                            <p class="text-sm text-gray-500 text-center lang" data-lang-en="Show this QR code at the front desk for check-in" data-lang-zh="在前台出示此QR碼進行簽到">Show this QR code at the front desk for check-in</p>
+                        </div>
+                    </div>
+                <?php else: ?>
+                    <div class="text-center text-gray-500">
+                        <svg class="mx-auto h-16 w-16 text-gray-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                        <p class="lang" data-lang-en="No card number assigned yet" data-lang-zh="尚未分配卡號">No card number assigned yet</p>
+                        <p class="text-sm lang" data-lang-en="Please contact an administrator" data-lang-zh="請聯繫管理員">Please contact an administrator</p>
+                    </div>
+                <?php endif; ?>
+            </div>
+            
+            <!-- Payment History Section -->
+            <div class="bg-white p-6 rounded-2xl shadow-lg mb-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 lang" data-lang-en="Payment History" data-lang-zh="付款歷史">Payment History</h3>
+                <?php if (empty($payment_history)): ?>
+                    <p class="text-gray-500 text-center py-4 lang" data-lang-en="No payment history found." data-lang-zh="找不到付款歷史記錄。">No payment history found.</p>
+                <?php else: ?>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full">
+                            <thead>
+                                <tr class="border-b">
+                                    <th class="text-left py-3 px-4 font-semibold text-sm lang" data-lang-en="Date" data-lang-zh="日期">Date</th>
+                                    <th class="text-left py-3 px-4 font-semibold text-sm lang" data-lang-en="Amount" data-lang-zh="金額">Amount</th>
+                                    <th class="text-left py-3 px-4 font-semibold text-sm lang" data-lang-en="Method" data-lang-zh="付款方式">Method</th>
+                                    <th class="text-left py-3 px-4 font-semibold text-sm lang" data-lang-en="Status" data-lang-zh="狀態">Status</th>
+                                    <th class="text-left py-3 px-4 font-semibold text-sm lang" data-lang-en="Notes" data-lang-zh="備註">Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($payment_history as $payment): ?>
+                                    <tr class="border-b hover:bg-gray-50">
+                                        <td class="py-3 px-4"><?php echo date("M d, Y", strtotime($payment['payment_date'])); ?></td>
+                                        <td class="py-3 px-4 font-semibold">$<?php echo number_format($payment['payment_amount'], 2); ?></td>
+                                        <td class="py-3 px-4"><?php echo htmlspecialchars($payment['payment_method'] ?? 'N/A'); ?></td>
+                                        <td class="py-3 px-4">
+                                            <span class="px-2 py-1 rounded-full text-xs font-semibold 
+                                                <?php echo $payment['payment_status'] === 'completed' ? 'bg-green-100 text-green-800' : 
+                                                    ($payment['payment_status'] === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'); ?>">
+                                                <?php echo ucfirst($payment['payment_status']); ?>
+                                            </span>
+                                        </td>
+                                        <td class="py-3 px-4 text-sm text-gray-600"><?php echo htmlspecialchars($payment['notes'] ?? ''); ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
+            </div>
+            
+            <!-- Membership History Section -->
+            <div class="bg-white p-6 rounded-2xl shadow-lg">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 lang" data-lang-en="Membership History" data-lang-zh="會員歷史">Membership History</h3>
                 <div class="overflow-x-auto">
-                    <table id="billing-table" class="min-w-full bg-white">
+                    <table class="min-w-full">
                         <thead>
-                            <tr>
-                                <th class="text-left py-3 px-4 uppercase font-semibold text-sm lang" data-lang-en="Membership" data-lang-zh="會員資格">Membership</th>
-                                <th class="text-left py-3 px-4 uppercase font-semibold text-sm lang" data-lang-en="Expiry Date" data-lang-zh="到期日">Expiry Date</th>
-                                <th class="text-left py-3 px-4 uppercase font-semibold text-sm lang" data-lang-en="Status" data-lang-zh="狀態">Status</th>
-                                <th class="text-left py-3 px-4 uppercase font-semibold text-sm lang" data-lang-en="Classes Remaining" data-lang-zh="剩餘課程">Classes Remaining</th>
+                            <tr class="border-b">
+                                <th class="text-left py-3 px-4 font-semibold text-sm lang" data-lang-en="Membership" data-lang-zh="會員資格">Membership</th>
+                                <th class="text-left py-3 px-4 font-semibold text-sm lang" data-lang-en="Expiry Date" data-lang-zh="到期日">Expiry Date</th>
+                                <th class="text-left py-3 px-4 font-semibold text-sm lang" data-lang-en="Status" data-lang-zh="狀態">Status</th>
+                                <th class="text-left py-3 px-4 font-semibold text-sm lang" data-lang-en="Payment Status" data-lang-zh="付款狀態">Payment Status</th>
+                                <th class="text-left py-3 px-4 font-semibold text-sm lang" data-lang-en="Classes Remaining" data-lang-zh="剩餘課程">Classes Remaining</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-700">
+                        <tbody>
                             <?php if (empty($billing_history)): ?>
                                 <tr>
-                                    <td colspan="4" class="text-center py-4 lang" data-lang-en="No membership history found." data-lang-zh="找不到會員歷史記錄。">No membership history found.</td>
+                                    <td colspan="5" class="text-center py-4 text-gray-500 lang" data-lang-en="No membership history found." data-lang-zh="找不到會員歷史記錄。">No membership history found.</td>
                                 </tr>
                             <?php else: ?>
                                 <?php foreach ($billing_history as $item): ?>
@@ -1019,14 +1083,22 @@ mysqli_close($link);
                                     $status = ($expiry_timestamp >= $today_timestamp) ? 'Active' : 'Expired';
                                     $status_zh = ($expiry_timestamp >= $today_timestamp) ? '有效' : '已過期';
                                     $status_class = ($expiry_timestamp >= $today_timestamp) ? 'text-green-600' : 'text-red-600';
+                                    $payment_status = $item['payment_status'] ?? 'pending';
                                     ?>
-                                    <tr>
-                                        <td data-label="Membership"><?php echo htmlspecialchars($item['membership_type']); ?></td>
-                                        <td data-label="Expiry Date"><?php echo date("m/d/Y", $expiry_timestamp); ?></td>
-                                        <td data-label="Status" class="font-bold <?php echo $status_class; ?>">
+                                    <tr class="border-b hover:bg-gray-50">
+                                        <td class="py-3 px-4"><?php echo htmlspecialchars($item['membership_type']); ?></td>
+                                        <td class="py-3 px-4"><?php echo date("M d, Y", $expiry_timestamp); ?></td>
+                                        <td class="py-3 px-4 font-bold <?php echo $status_class; ?>">
                                             <span class="lang" data-lang-en="<?php echo $status; ?>" data-lang-zh="<?php echo $status_zh; ?>"><?php echo $status; ?></span>
                                         </td>
-                                        <td data-label="Classes Remaining">
+                                        <td class="py-3 px-4">
+                                            <span class="px-2 py-1 rounded-full text-xs font-semibold 
+                                                <?php echo $payment_status === 'paid' ? 'bg-green-100 text-green-800' : 
+                                                    ($payment_status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'); ?>">
+                                                <?php echo ucfirst($payment_status); ?>
+                                            </span>
+                                        </td>
+                                        <td class="py-3 px-4">
                                             <?php if ($is_class_pass): ?>
                                                 <?php echo htmlspecialchars($item['class_credits']); ?>
                                             <?php else: ?>
@@ -1472,6 +1544,19 @@ mysqli_close($link);
             });
             threadHtml += '</div>';
 
+            // Add thread header with delete button
+            threadHtml = `
+                <div class="flex-shrink-0 pb-4 border-b flex justify-between items-center">
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-900">${threadMessages[0]?.subject || 'Conversation'}</h3>
+                        <p class="text-sm text-gray-500 mt-1">${threadMessages.length} messages</p>
+                    </div>
+                    <button class="delete-message-btn text-red-500 hover:text-red-700 font-semibold text-sm px-3 py-1 rounded border border-red-300 hover:bg-red-50 transition-colors" data-recipient-id="${originalRecipientId}">
+                        <span class="lang" data-lang-en="Delete Thread" data-lang-zh="刪除對話">Delete Thread</span>
+                    </button>
+                </div>
+            ` + threadHtml;
+
             // Add reply form
             threadHtml += `
                 <div class="p-4 border-t bg-gray-50 flex-shrink-0">
@@ -1497,6 +1582,13 @@ mysqli_close($link);
 
             // Add event listener for the new form
             document.getElementById('reply-form').addEventListener('submit', handleReplySubmit);
+            
+            // Add event listener for delete button
+            const deleteBtn = messageViewerContent.querySelector('.delete-message-btn');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', handleDeleteThread);
+            }
+            
             updateLanguage();
         }
 
@@ -1527,6 +1619,63 @@ mysqli_close($link);
                  submitButton.disabled = false;
                  updateLanguage(); // Reset button text
             });
+        }
+
+        function handleDeleteThread(e) {
+            e.preventDefault();
+            const deleteBtn = e.target.closest('.delete-message-btn');
+            if (!deleteBtn) return;
+
+            const recipientId = deleteBtn.dataset.recipientId;
+            const confirmMsg = currentLang === 'zh' ? '您確定要刪除這個對話嗎？此操作無法撤銷。' : 'Are you sure you want to delete this conversation? This action cannot be undone.';
+
+            if (confirm(confirmMsg)) {
+                const formData = new FormData();
+                formData.append('action', 'delete_message');
+                formData.append('recipient_id', recipientId);
+
+                fetch(window.location.pathname, { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        // Remove from UI
+                        const itemToRemove = messageList.querySelector(`.message-item[data-recipient-id="${recipientId}"]`);
+                        if (itemToRemove) itemToRemove.remove();
+                        
+                        // Clear message viewer
+                        messageViewerContent.classList.add('hidden');
+                        messageViewerPlaceholder.classList.remove('hidden');
+                        messageViewerPlaceholder.innerHTML = '<p class="text-gray-400 lang" data-lang-en="Select a message to read" data-lang-zh="選擇一則訊息閱讀">Select a message to read</p>';
+                        updateLanguage();
+                        
+                        // Update unread count if needed
+                        if (unreadBadge) {
+                            const currentCount = parseInt(unreadBadge.textContent);
+                            if (currentCount > 0) {
+                                unreadBadge.textContent = Math.max(0, currentCount - 1);
+                                if (parseInt(unreadBadge.textContent) <= 0) {
+                                    unreadBadge.parentElement.classList.add('hidden');
+                                }
+                            }
+                        }
+                        if (unreadBadgeMobile) {
+                            const currentCount = parseInt(unreadBadgeMobile.textContent);
+                            if (currentCount > 0) {
+                                unreadBadgeMobile.textContent = Math.max(0, currentCount - 1);
+                                if (parseInt(unreadBadgeMobile.textContent) <= 0) {
+                                    unreadBadgeMobile.parentElement.classList.add('hidden');
+                                }
+                            }
+                        }
+                        
+                        alert(data.message);
+                    } else {
+                        alert(data.message || 'Failed to delete conversation.');
+                    }
+                }).catch(err => {
+                    alert('An error occurred while deleting the conversation.');
+                });
+            }
         }
         
         function markThreadAsRead(recipientId) {
@@ -1597,6 +1746,74 @@ mysqli_close($link);
 
         // Initial language setup on page load
         updateLanguage();
+        
+        // QR Code Generation and Functionality
+        <?php if (isset($member_details['old_card']) && !empty($member_details['old_card'])): ?>
+        console.log('QR Code setup starting for card:', '<?php echo htmlspecialchars($member_details['old_card']); ?>');
+        
+        // QR Code Toggle Button Functionality
+        const qrToggleBtn = document.getElementById('qr-toggle-btn');
+        const qrContainerDiv = document.getElementById('qr-container');
+        const qrModal = document.getElementById('qr-modal');
+        const closeQrModal = document.getElementById('close-qr-modal');
+        
+        console.log('QR elements found:', {
+            toggleBtn: qrToggleBtn,
+            container: qrContainerDiv,
+            modal: qrModal,
+            closeBtn: closeQrModal
+        });
+        
+        if (qrToggleBtn && qrContainerDiv) {
+            qrToggleBtn.addEventListener('click', function() {
+                console.log('QR toggle button clicked');
+                if (qrContainerDiv.classList.contains('hidden')) {
+                    // Show QR code
+                    qrContainerDiv.classList.remove('hidden');
+                    qrToggleBtn.querySelector('span').textContent = '<?php echo $lang === 'zh' ? '隱藏QR碼' : 'Hide QR Code'; ?>';
+                    console.log('QR code shown');
+                } else {
+                    // Hide QR code
+                    qrContainerDiv.classList.add('hidden');
+                    qrToggleBtn.querySelector('span').textContent = '<?php echo $lang === 'zh' ? '顯示QR碼' : 'Show QR Code'; ?>';
+                    console.log('QR code hidden');
+                }
+            });
+        }
+        
+        // Modal functionality
+        if (qrToggleBtn && qrModal) {
+            qrToggleBtn.addEventListener('dblclick', function() {
+                console.log('QR modal opened');
+                qrModal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            });
+        }
+        
+        if (closeQrModal && qrModal) {
+            closeQrModal.addEventListener('click', function() {
+                console.log('QR modal closed');
+                qrModal.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            });
+            
+            // Close modal when clicking outside
+            qrModal.addEventListener('click', function(e) {
+                if (e.target === qrModal) {
+                    qrModal.classList.add('hidden');
+                    document.body.style.overflow = 'auto';
+                }
+            });
+            
+            // Close modal with Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && !qrModal.classList.contains('hidden')) {
+                    qrModal.classList.add('hidden');
+                    document.body.style.overflow = 'auto';
+                }
+            });
+        }
+        <?php endif; ?>
     });
     </script>
 </body>

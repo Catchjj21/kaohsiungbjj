@@ -232,7 +232,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['action'])) {
 
 // --- Fetch all coaches from the database who have availability set ---
 $coaches = [];
-$sql_coaches = "SELECT u.id, u.first_name, u.last_name, u.profile_picture_url, u.belt_color, ca.price FROM users u JOIN coach_availability ca ON u.id = ca.coach_id WHERE u.role = 'coach' GROUP BY u.id ORDER BY u.first_name";
+$sql_coaches = "SELECT u.id, u.first_name, u.last_name, u.profile_picture_url, u.belt_color, MIN(ca.price) as price FROM users u JOIN coach_availability ca ON u.id = ca.coach_id WHERE u.role = 'coach' GROUP BY u.id, u.first_name, u.last_name, u.profile_picture_url, u.belt_color ORDER BY u.first_name";
 $result_coaches = mysqli_query($link, $sql_coaches);
 if ($result_coaches) {
     while ($row = mysqli_fetch_assoc($result_coaches)) {

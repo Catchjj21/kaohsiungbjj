@@ -30,16 +30,18 @@ mysqli_close($link);
 // --- New code for dashboard button ---
 
 // Get the user's role from the session. Use a default value if not set.
-$user_role = $_SESSION['user_role'] ?? '';
+$user_role = $_SESSION['role'] ?? '';
 $dashboard_url = '';
 
 // Determine the dashboard URL based on the user's role
 if ($user_role === 'coach') {
-    $dashboard_url = '/coach/coach_dashboard.php';
+    $dashboard_url = 'coach/coach_dashboard.php';
 } elseif ($user_role === 'parent') {
-    $dashboard_url = '/parent_dashboard.php';
+    $dashboard_url = 'parents_dashboard.php';
 } elseif ($user_role === 'member') {
-    $dashboard_url = '/dashboard.php';
+    $dashboard_url = 'dashboard.php';
+} elseif ($user_role === 'admin') {
+    $dashboard_url = 'admin/admin_dashboard.php';
 }
 
 ?>
@@ -65,7 +67,7 @@ if ($user_role === 'coach') {
             
             <?php if ($dashboard_url): ?>
                 <a href="<?php echo $dashboard_url; ?>" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out">
-                    Back to Dashboard
+                    Back to Dashboard / 返回儀表板
                 </a>
             <?php endif; ?>
             

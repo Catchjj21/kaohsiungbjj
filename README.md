@@ -1,2 +1,2 @@
 # kaohsiungbjj test
-new site test,  changed
+new site test,  git  changed

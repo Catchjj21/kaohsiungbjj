@@ -52,7 +52,12 @@ $translations = [
         'ok' => 'OK',
         'booked_by' => 'Booked by: ',
         'set_price' => 'Set Price per hour:',
-        'twd_symbol' => 'TWD'
+        'twd_symbol' => 'TWD',
+        'available' => 'Available',
+        'booked' => 'Booked',
+        'pending' => 'Pending',
+        'class' => 'Class',
+        'class_scheduled' => 'Class Scheduled'
     ],
     'zh' => [
         'portal_title' => '教練門戶',
@@ -88,10 +93,22 @@ $translations = [
         'ok' => '好的',
         'booked_by' => '已預約：',
         'set_price' => '設定每小時費用：',
-        'twd_symbol' => '新台幣'
+        'twd_symbol' => '新台幣',
+        'available' => '可用',
+        'booked' => '已預約',
+        'pending' => '待確認',
+        'class' => '課程',
+        'class_scheduled' => '課程已安排'
     ]
 ];
+// Initialize language - prioritize user selection over session
 $lang = $_SESSION['lang'] ?? 'en';
+
+// Check if there's a language preference in the request (from JavaScript)
+if (isset($_GET['lang']) && in_array($_GET['lang'], ['en', 'zh'])) {
+    $lang = $_GET['lang'];
+    $_SESSION['lang'] = $lang;
+}
 $days_zh = ['Monday' => '星期一', 'Tuesday' => '星期二', 'Wednesday' => '星期三', 'Thursday' => '星期四', 'Friday' => '星期五', 'Saturday' => '星期六', 'Sunday' => '星期日'];
 
 // --- START AJAX HANDLER ---
@@ -218,6 +235,22 @@ if ($stmt_bookings = mysqli_prepare($link, $sql_bookings)) {
     mysqli_stmt_close($stmt_bookings);
 }
 
+// --- Fetch all classes for the current coach to prevent double bookings ---
+$classes = [];
+$sql_classes = "SELECT c.id, c.name, c.name_zh, c.day_of_week, c.start_time, c.end_time, c.is_active, c.capacity, c.age
+                FROM classes c 
+                WHERE c.coach_id = ? AND c.is_active = 1
+                ORDER BY FIELD(c.day_of_week, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'), c.start_time";
+if ($stmt_classes = mysqli_prepare($link, $sql_classes)) {
+    mysqli_stmt_bind_param($stmt_classes, "i", $coach_id);
+    mysqli_stmt_execute($stmt_classes);
+    $result_classes = mysqli_stmt_get_result($stmt_classes);
+    while ($row = mysqli_fetch_assoc($result_classes)) {
+        $classes[] = $row;
+    }
+    mysqli_stmt_close($stmt_classes);
+}
+
 mysqli_close($link);
 
 $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -275,6 +308,10 @@ for ($i = 8; $i < 22; $i++) {
             background-color: #1e40af; /* blue-800 */
             color: #fff;
         }
+        .time-slot.class {
+            background-color: #7c3aed; /* violet-600 */
+            color: #fff;
+        }
         .time-slot.default {
             background-color: #f3f4f6; /* gray-100 */
         }
@@ -298,11 +335,17 @@ for ($i = 8; $i < 22; $i++) {
     <nav class="bg-white shadow-md">
         <div class="container mx-auto px-6 py-4 flex justify-between items-center">
             <span class="font-bold text-xl text-gray-800"><?php echo $translations[$lang]['portal_title']; ?></span>
-            <div>
-                <a href="../coach/coach_dashboard.php" class="bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700 transition">
+            <div class="flex items-center space-x-4">
+                <!-- Language Switcher -->
+                <div class="flex items-center space-x-2 text-sm border-l pl-4">
+                    <button id="lang-en" class="font-bold text-blue-600">EN</button>
+                    <span class="text-gray-300">|</span>
+                    <button id="lang-zh" class="font-normal text-gray-500 hover:text-blue-600">中文</button>
+                </div>
+                <a href="../coach/coach_dashboard.php" class="bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700 transition lang" data-lang-en="Back to Dashboard" data-lang-zh="返回儀表板">
                     Back to Dashboard
                 </a>
-                <a href="../logout.php" class="bg-purple-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-purple-700 transition">Logout</a>
+                <a href="../logout.php" class="bg-purple-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-purple-700 transition lang" data-lang-en="Logout" data-lang-zh="登出">Logout</a>
             </div>
         </div>
     </nav>
@@ -318,9 +361,11 @@ for ($i = 8; $i < 22; $i++) {
             </div>
         <?php endif; ?>
 
-        <div class="bg-white p-8 rounded-2xl shadow-lg mt-8">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4"><?php echo $translations[$lang]['set_availability_title']; ?></h2>
-            <p class="text-gray-600 mb-4"><?php echo $translations[$lang]['set_availability_text']; ?></p>
+                 <div class="bg-white p-8 rounded-2xl shadow-lg mt-8">
+             <h2 class="text-2xl font-bold text-gray-800 mb-4"><?php echo $translations[$lang]['set_availability_title']; ?></h2>
+             <p class="text-gray-600 mb-4"><?php echo $translations[$lang]['set_availability_text']; ?></p>
+             
+
 
             <form id="schedule-form" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
                 <input type="hidden" name="action" value="save_schedule">
@@ -369,6 +414,15 @@ for ($i = 8; $i < 22; $i++) {
                                     }
                                 }
 
+                                // Check if there's a class at this time slot
+                                $class_info = null;
+                                foreach ($classes as $class) {
+                                    if ($class['day_of_week'] === $day && $class['start_time'] === $slot['start']) {
+                                        $class_info = $class;
+                                        break;
+                                    }
+                                }
+
                                 $slot_class = 'default';
                                 $slot_content = '';
                                 $is_clickable = true;
@@ -376,6 +430,10 @@ for ($i = 8; $i < 22; $i++) {
                                 if ($booking_info) {
                                     $slot_class = $booking_info['status'];
                                     $slot_content = $booking_info['full_name'];
+                                    $is_clickable = false;
+                                } elseif ($class_info) {
+                                    $slot_class = 'class';
+                                    $slot_content = $lang === 'zh' ? $class_info['name_zh'] : $class_info['name'];
                                     $is_clickable = false;
                                 } elseif ($is_available) {
                                     $slot_class = 'available';
@@ -389,7 +447,7 @@ for ($i = 8; $i < 22; $i++) {
                                  data-end="<?php echo $slot['end']; ?>"
                                  data-is-clickable="<?php echo $is_clickable ? 'true' : 'false'; ?>">
                                  <?php if ($slot_content): ?>
-                                     <span class="text-xs <?php echo $is_clickable ? 'text-gray-700' : ''; ?>">
+                                     <span class="text-xs <?php echo $is_clickable ? 'text-gray-700' : ''; ?> <?php echo ($slot_class === 'available' || $slot_class === 'class') ? 'lang' : ''; ?>" <?php echo ($slot_class === 'available') ? 'data-lang-en="' . $translations['en']['available'] . '" data-lang-zh="' . $translations['zh']['available'] . '"' : ''; ?> <?php echo ($slot_class === 'class' && $class_info) ? 'data-lang-en="' . htmlspecialchars($class_info['name']) . '" data-lang-zh="' . htmlspecialchars($class_info['name_zh']) . '"' : ''; ?>>
                                          <?php echo $slot_content; ?>
                                      </span>
                                  <?php endif; ?>
@@ -398,11 +456,31 @@ for ($i = 8; $i < 22; $i++) {
                     <?php endforeach; ?>
                 </div>
 
+                <!-- Legend -->
+                <div class="mt-6 flex flex-wrap gap-4 text-sm">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-4 h-4 bg-green-100 border border-green-400 rounded"></div>
+                        <span class="lang" data-lang-en="Available for 1-on-1" data-lang-zh="可進行一對一">Available for 1-on-1</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-4 h-4 bg-violet-600 rounded"></div>
+                        <span class="lang" data-lang-en="Class Scheduled" data-lang-zh="課程已安排">Class Scheduled</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-4 h-4 bg-blue-800 rounded"></div>
+                        <span class="lang" data-lang-en="1-on-1 Confirmed" data-lang-zh="一對一已確認">1-on-1 Confirmed</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-4 h-4 bg-amber-500 rounded"></div>
+                        <span class="lang" data-lang-en="1-on-1 Pending" data-lang-zh="一對一待確認">1-on-1 Pending</span>
+                    </div>
+                </div>
+
                 <div class="mt-8 flex justify-end space-x-4">
-                    <button type="button" id="reset_button" class="bg-gray-300 text-gray-800 font-bold py-2.5 px-6 rounded-lg hover:bg-gray-400 transition">
+                    <button type="button" id="reset-schedule" class="bg-gray-300 text-gray-800 font-bold py-2.5 px-6 rounded-lg hover:bg-gray-400 transition lang" data-lang-en="<?php echo $translations['en']['reset_button']; ?>" data-lang-zh="<?php echo $translations['zh']['reset_button']; ?>">
                         <?php echo $translations[$lang]['reset_button']; ?>
                     </button>
-                    <button type="submit" class="bg-blue-600 text-white font-bold py-2.5 px-6 rounded-lg hover:bg-blue-700 transition">
+                    <button type="submit" id="save-schedule" class="bg-blue-600 text-white font-bold py-2.5 px-6 rounded-lg hover:bg-blue-700 transition lang" data-lang-en="<?php echo $translations['en']['save_button']; ?>" data-lang-zh="<?php echo $translations['zh']['save_button']; ?>">
                         <?php echo $translations[$lang]['save_button']; ?>
                     </button>
                 </div>
@@ -411,23 +489,23 @@ for ($i = 8; $i < 22; $i++) {
 
         <!-- Pending Requests Section -->
         <div class="bg-white p-8 rounded-2xl shadow-lg mt-12">
-            <h2 class="text-2xl font-bold text-gray-800"><?php echo $translations[$lang]['pending_requests_title']; ?></h2>
+            <h2 class="text-2xl font-bold text-gray-800 lang" data-lang-en="<?php echo $translations['en']['pending_requests_title']; ?>" data-lang-zh="<?php echo $translations['zh']['pending_requests_title']; ?>"><?php echo $translations[$lang]['pending_requests_title']; ?></h2>
             <div class="mt-4">
                 <?php 
                 $pending_requests = array_filter($bookings, function($booking) {
                     return $booking['status'] === 'pending';
                 });
                 if (empty($pending_requests)): ?>
-                    <p class="text-gray-600"><?php echo $translations[$lang]['no_requests']; ?></p>
+                    <p class="text-gray-600 lang" data-lang-en="<?php echo $translations['en']['no_requests']; ?>" data-lang-zh="<?php echo $translations['zh']['no_requests']; ?>"><?php echo $translations[$lang]['no_requests']; ?></p>
                 <?php else: ?>
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php echo $translations[$lang]['member']; ?></th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php echo $translations[$lang]['date']; ?></th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php echo $translations[$lang]['time']; ?></th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php echo $translations[$lang]['actions']; ?></th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider lang" data-lang-en="<?php echo $translations['en']['member']; ?>" data-lang-zh="<?php echo $translations['zh']['member']; ?>"><?php echo $translations[$lang]['member']; ?></th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider lang" data-lang-en="<?php echo $translations['en']['date']; ?>" data-lang-zh="<?php echo $translations['zh']['date']; ?>"><?php echo $translations[$lang]['date']; ?></th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider lang" data-lang-en="<?php echo $translations['en']['time']; ?>" data-lang-zh="<?php echo $translations['zh']['time']; ?>"><?php echo $translations[$lang]['time']; ?></th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider lang" data-lang-en="<?php echo $translations['en']['actions']; ?>" data-lang-zh="<?php echo $translations['zh']['actions']; ?>"><?php echo $translations[$lang]['actions']; ?></th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
@@ -437,12 +515,12 @@ for ($i = 8; $i < 22; $i++) {
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo htmlspecialchars($request['booking_date']); ?></td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo date("g:i A", strtotime($request['start_time'])); ?></td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            <button class="text-green-600 hover:text-green-800 font-semibold mr-4 confirm-request-btn"
+                                            <button class="text-green-600 hover:text-green-800 font-semibold mr-4 confirm-request-btn lang" data-lang-en="<?php echo $translations['en']['confirm_button']; ?>" data-lang-zh="<?php echo $translations['zh']['confirm_button']; ?>"
                                                     data-id="<?php echo htmlspecialchars($request['id']); ?>"
                                                     data-member-name="<?php echo htmlspecialchars($request['full_name']); ?>">
                                                 <?php echo $translations[$lang]['confirm_button']; ?>
                                             </button>
-                                            <button class="text-red-600 hover:text-red-800 font-semibold cancel-request-btn"
+                                            <button class="text-red-600 hover:text-red-800 font-semibold cancel-request-btn lang" data-lang-en="<?php echo $translations['en']['cancel_button']; ?>" data-lang-zh="<?php echo $translations['zh']['cancel_button']; ?>"
                                                     data-id="<?php echo htmlspecialchars($request['id']); ?>"
                                                     data-member-name="<?php echo htmlspecialchars($request['full_name']); ?>">
                                                 <?php echo $translations[$lang]['cancel_button']; ?>
@@ -470,7 +548,7 @@ for ($i = 8; $i < 22; $i++) {
                 <div class="mt-6 flex justify-end space-x-4">
                     <button id="modal-action-btn" class="text-white font-bold py-2 px-6 rounded-lg transition">
                     </button>
-                    <button id="modal-cancel-btn" class="bg-gray-300 text-gray-800 font-bold py-2 px-6 rounded-lg hover:bg-gray-400 transition">
+                    <button id="modal-cancel-btn" class="bg-gray-300 text-gray-800 font-bold py-2 px-6 rounded-lg hover:bg-gray-400 transition lang" data-lang-en="<?php echo $translations['en']['cancel_button']; ?>" data-lang-zh="<?php echo $translations['zh']['cancel_button']; ?>">
                         <?php echo $translations[$lang]['cancel_button']; ?>
                     </button>
                 </div>
@@ -484,7 +562,7 @@ for ($i = 8; $i < 22; $i++) {
             <div id="status-modal-content" class="text-center py-4">
             </div>
             <div class="text-center">
-                <button id="close-status-modal" class="bg-blue-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-600 transition">
+                <button id="close-status-modal" class="bg-blue-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-600 transition lang" data-lang-en="<?php echo $translations['en']['ok']; ?>" data-lang-zh="<?php echo $translations['zh']['ok']; ?>">
                     <?php echo $translations[$lang]['ok']; ?>
                 </button>
             </div>
@@ -649,6 +727,134 @@ for ($i = 8; $i < 22; $i++) {
 
             // Initial population of the hidden input
             updateAvailabilityInput();
+
+            // --- LANGUAGE SWITCHING FUNCTIONALITY ---
+            const translations = <?php echo json_encode($translations); ?>;
+            let currentLang = localStorage.getItem('coachLang') || '<?php echo $lang; ?>';
+
+            function updateLanguage() {
+                document.querySelectorAll('.lang').forEach(el => {
+                    const text = el.getAttribute('data-lang-' + currentLang);
+                    if (text) el.textContent = text;
+                });
+                document.getElementById('lang-en').classList.toggle('font-bold', currentLang === 'en');
+                document.getElementById('lang-en').classList.toggle('text-blue-600', currentLang === 'en');
+                document.getElementById('lang-zh').classList.toggle('font-bold', currentLang === 'zh');
+                document.getElementById('lang-zh').classList.toggle('text-blue-600', currentLang === 'zh');
+            }
+
+            function setLanguage(lang) {
+                currentLang = lang;
+                localStorage.setItem('coachLang', lang);
+                
+                // Save language preference to server and reload page
+                fetch('set_language.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `lang=${lang}`
+                }).then(() => {
+                    // Reload the page to apply the new language
+                    window.location.reload();
+                }).catch(error => {
+                    console.error('Error saving language preference:', error);
+                    // Still reload even if there's an error
+                    window.location.reload();
+                });
+            }
+
+            document.getElementById('lang-en').addEventListener('click', () => setLanguage('en'));
+            document.getElementById('lang-zh').addEventListener('click', () => setLanguage('zh'));
+
+            // Language translations for JavaScript
+            const jsTranslations = {
+                'en': {
+                    'portal_title': '<?php echo $translations['en']['portal_title']; ?>',
+                    'logout': '<?php echo $translations['en']['logout']; ?>',
+                    'set_availability_title': '<?php echo $translations['en']['set_availability_title']; ?>',
+                    'set_availability_text': '<?php echo $translations['en']['set_availability_text']; ?>',
+                    'schedule_saved': '<?php echo $translations['en']['schedule_saved']; ?>',
+                    'schedule_cleared': '<?php echo $translations['en']['schedule_cleared']; ?>',
+                    'confirm_clear_schedule': '<?php echo $translations['en']['confirm_clear_schedule']; ?>',
+                    'reset_button': '<?php echo $translations['en']['reset_button']; ?>',
+                    'save_button': '<?php echo $translations['en']['save_button']; ?>',
+                    'monday': '<?php echo $translations['en']['monday']; ?>',
+                    'tuesday': '<?php echo $translations['en']['tuesday']; ?>',
+                    'wednesday': '<?php echo $translations['en']['wednesday']; ?>',
+                    'thursday': '<?php echo $translations['en']['thursday']; ?>',
+                    'friday': '<?php echo $translations['en']['friday']; ?>',
+                    'saturday': '<?php echo $translations['en']['saturday']; ?>',
+                    'sunday': '<?php echo $translations['en']['sunday']; ?>',
+                    'pending_requests_title': '<?php echo $translations['en']['pending_requests_title']; ?>',
+                    'no_requests': '<?php echo $translations['en']['no_requests']; ?>',
+                    'member': '<?php echo $translations['en']['member']; ?>',
+                    'date': '<?php echo $translations['en']['date']; ?>',
+                    'time': '<?php echo $translations['en']['time']; ?>',
+                    'actions': '<?php echo $translations['en']['actions']; ?>',
+                    'confirm_button': '<?php echo $translations['en']['confirm_button']; ?>',
+                    'cancel_button': '<?php echo $translations['en']['cancel_button']; ?>',
+                    'request_confirmed': '<?php echo $translations['en']['request_confirmed']; ?>',
+                    'request_cancelled': '<?php echo $translations['en']['request_cancelled']; ?>',
+                    'confirm_request_modal_title': '<?php echo $translations['en']['confirm_request_modal_title']; ?>',
+                    'confirm_request_modal_message': '<?php echo $translations['en']['confirm_request_modal_message']; ?>',
+                    'confirm_cancel_modal_title': '<?php echo $translations['en']['confirm_cancel_modal_title']; ?>',
+                    'confirm_cancel_modal_message': '<?php echo $translations['en']['confirm_cancel_modal_message']; ?>',
+                    'ok': '<?php echo $translations['en']['ok']; ?>',
+                    'booked_by': '<?php echo $translations['en']['booked_by']; ?>',
+                    'set_price': '<?php echo $translations['en']['set_price']; ?>',
+                    'twd_symbol': '<?php echo $translations['en']['twd_symbol']; ?>',
+                                         'available': '<?php echo $translations['en']['available']; ?>',
+                     'booked': '<?php echo $translations['en']['booked']; ?>',
+                     'pending': '<?php echo $translations['en']['pending']; ?>',
+                     'class': '<?php echo $translations['en']['class']; ?>',
+                     'class_scheduled': '<?php echo $translations['en']['class_scheduled']; ?>'
+                },
+                'zh': {
+                    'portal_title': '<?php echo $translations['zh']['portal_title']; ?>',
+                    'logout': '<?php echo $translations['zh']['logout']; ?>',
+                    'set_availability_title': '<?php echo $translations['zh']['set_availability_title']; ?>',
+                    'set_availability_text': '<?php echo $translations['zh']['set_availability_text']; ?>',
+                    'schedule_saved': '<?php echo $translations['zh']['schedule_saved']; ?>',
+                    'schedule_cleared': '<?php echo $translations['zh']['schedule_cleared']; ?>',
+                    'confirm_clear_schedule': '<?php echo $translations['zh']['confirm_clear_schedule']; ?>',
+                    'reset_button': '<?php echo $translations['zh']['reset_button']; ?>',
+                    'save_button': '<?php echo $translations['zh']['save_button']; ?>',
+                    'monday': '<?php echo $translations['zh']['monday']; ?>',
+                    'tuesday': '<?php echo $translations['zh']['tuesday']; ?>',
+                    'wednesday': '<?php echo $translations['zh']['wednesday']; ?>',
+                    'thursday': '<?php echo $translations['zh']['thursday']; ?>',
+                    'friday': '<?php echo $translations['zh']['friday']; ?>',
+                    'saturday': '<?php echo $translations['zh']['saturday']; ?>',
+                    'sunday': '<?php echo $translations['zh']['sunday']; ?>',
+                    'pending_requests_title': '<?php echo $translations['zh']['pending_requests_title']; ?>',
+                    'no_requests': '<?php echo $translations['zh']['no_requests']; ?>',
+                    'member': '<?php echo $translations['zh']['member']; ?>',
+                    'date': '<?php echo $translations['zh']['date']; ?>',
+                    'time': '<?php echo $translations['zh']['time']; ?>',
+                    'actions': '<?php echo $translations['zh']['actions']; ?>',
+                    'confirm_button': '<?php echo $translations['zh']['confirm_button']; ?>',
+                    'cancel_button': '<?php echo $translations['zh']['cancel_button']; ?>',
+                    'request_confirmed': '<?php echo $translations['zh']['request_confirmed']; ?>',
+                    'request_cancelled': '<?php echo $translations['zh']['request_cancelled']; ?>',
+                    'confirm_request_modal_title': '<?php echo $translations['zh']['confirm_request_modal_title']; ?>',
+                    'confirm_request_modal_message': '<?php echo $translations['zh']['confirm_request_modal_message']; ?>',
+                    'confirm_cancel_modal_title': '<?php echo $translations['zh']['confirm_cancel_modal_title']; ?>',
+                    'confirm_cancel_modal_message': '<?php echo $translations['zh']['confirm_cancel_modal_message']; ?>',
+                    'ok': '<?php echo $translations['zh']['ok']; ?>',
+                    'booked_by': '<?php echo $translations['zh']['booked_by']; ?>',
+                    'set_price': '<?php echo $translations['zh']['set_price']; ?>',
+                    'twd_symbol': '<?php echo $translations['zh']['twd_symbol']; ?>',
+                                         'available': '<?php echo $translations['zh']['available']; ?>',
+                     'booked': '<?php echo $translations['zh']['booked']; ?>',
+                     'pending': '<?php echo $translations['zh']['pending']; ?>',
+                     'class': '<?php echo $translations['zh']['class']; ?>',
+                     'class_scheduled': '<?php echo $translations['zh']['class_scheduled']; ?>'
+                }
+            };
+
+                        // Initialize language on page load
+            updateLanguage();
         });
     </script>
 </body>

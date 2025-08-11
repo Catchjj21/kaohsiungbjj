@@ -64,7 +64,10 @@ $translations = [
         'select_message' => 'Select a message to read',
         'technique_of_the_week' => 'Technique of the Week',
         'manage_techniques' => 'Manage Techniques',
-        'manage_technique_desc' => 'Manage and post the technique of the week video.'
+        'manage_technique_desc' => 'Manage and post the technique of the week video.',
+        'coaching_log' => 'Coaching Log',
+        'coaching_log_desc' => 'Track what you taught and improve your coaching.',
+        'view_coaching_log' => 'View Coaching Log'
     ],
     'zh' => [
         'portal_title' => '教練門戶',
@@ -110,7 +113,10 @@ $translations = [
         'select_message' => '選擇一則訊息閱讀',
         'technique_of_the_week' => '本週技巧',
         'manage_techniques' => '管理技巧',
-        'manage_technique_desc' => '管理和發布本週的技巧影片。'
+        'manage_technique_desc' => '管理和發布本週的技巧影片。',
+        'coaching_log' => '教練日誌',
+        'coaching_log_desc' => '追踪您教授的內容並改善您的教練技巧。',
+        'view_coaching_log' => '查看教練日誌'
     ]
 ];
 $lang = $_SESSION['lang'] ?? 'en';
@@ -399,6 +405,13 @@ mysqli_close($link);
                     <p class="text-gray-600 mt-1">View past class attendance and member history.</p>
                     <a href="../training_log.php" class="mt-4 inline-block bg-blue-600 text-white font-bold py-2.5 px-6 rounded-lg hover:bg-blue-700 transition lang" data-lang-en="View Training Log" data-lang-zh="查看訓練日誌">
                         View Training Log
+                    </a>
+                </div>
+                <div class="bg-white p-8 rounded-2xl shadow-lg">
+                    <h2 class="text-2xl font-bold text-gray-800 lang" data-lang-en="Coaching Log" data-lang-zh="教練日誌">Coaching Log</h2>
+                    <p class="text-gray-600 mt-1 lang" data-lang-en="Track what you taught and improve your coaching." data-lang-zh="追踪您教授的內容並改善您的教練技巧。">Track what you taught and improve your coaching.</p>
+                    <a href="coaching_log.php" class="mt-4 inline-block bg-indigo-600 text-white font-bold py-2.5 px-6 rounded-lg hover:bg-indigo-700 transition lang" data-lang-en="View Coaching Log" data-lang-zh="查看教練日誌">
+                        View Coaching Log
                     </a>
                 </div>
                 <div class="bg-white p-8 rounded-2xl shadow-lg">

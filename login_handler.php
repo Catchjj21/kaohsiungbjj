@@ -1,9 +1,8 @@
 <?php
-// Start the session
-session_start();
+// Include the standardized session management
+require_once "session_manager.php";
 
 // Include the database configuration file
-// This assumes db_config.php is in the same folder.
 require_once "db_config.php";
 
 // Define variables and initialize with empty values
@@ -46,31 +45,14 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     
                     if(mysqli_stmt_fetch($stmt)){
                         if(password_verify($password, $hashed_password)){
-                            // Password is correct, so start a new session
+                            // Password is correct, create standardized session
+                            $session_data = createStandardizedSession($id, $first_name, $last_name, $email_from_db, $role, false);
                             
-                            // Store data in session variables
-                            $_SESSION["loggedin"] = true;
-                            $_SESSION["id"] = $id;
+                            // Get redirect URL based on role
+                            $redirect_url = getRedirectUrl($role, false);
                             
-                            // Combine first_name and last_name for full_name session variable
-                            $_SESSION["full_name"] = $first_name . " " . $last_name;
-                            
-                            // Use the email fetched from the database, not the posted one, for consistency
-                            $_SESSION["email"] = $email_from_db;                     
-                            $_SESSION["role"] = $role;
-
-                            // --- MODIFIED REDIRECTION LOGIC ---
-                            // Redirect based on the user's role
-                            if ($role == 'parent') {
-                                // Redirect parents to the specific family dashboard
-                                header("location: parents_dashboard.php");
-                            } else if ($role == 'coach') {
-                                // Redirect coaches to the new coach dashboard
-                                header("location: coach/coach_dashboard.php");
-                            } else {
-                                // Redirect everyone else (admin, member) to the general dashboard
-                                header("location: dashboard.php");
-                            }
+                            // Redirect to appropriate dashboard
+                            header("location: " . $redirect_url);
                             exit; // Always good practice to exit after a header redirect
                         } else{
                             // Password is not valid
